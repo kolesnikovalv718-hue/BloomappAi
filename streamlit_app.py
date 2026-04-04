@@ -1,5 +1,4 @@
 
-Устала посмотри, так как в самом начале:(
 import streamlit as st
 
 st.markdown("""
@@ -29,6 +28,9 @@ file_path = "blooms_dataset.csv"
 uploaded_file = st.file_uploader("Загрузите CSV с задачами", type=["csv"])
 if uploaded_file:
     df = pd.read_csv(uploaded_file, encoding='utf-8')
+    if uploaded_file:
+    df = pd.read_csv(uploaded_file, encoding='utf-8')
+    st.success(f"Загружено {len(df)} задач из CSV.")
 else:
     df = pd.DataFrame({
         "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
