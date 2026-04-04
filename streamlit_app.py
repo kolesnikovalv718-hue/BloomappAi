@@ -118,6 +118,15 @@ with cols[2]:
 with cols[3]:
     if st.button("Сохранить"):
         save_csv()
+# ---------------------------
+# Кнопка скачивания CSV
+# ---------------------------
+st.download_button(
+    label="Скачать CSV",
+    data=open(file_path, "rb").read(),  # читаем файл в байтах
+    file_name="blooms_dataset.csv",
+    mime="text/csv"
+)
 
 # ---------------------------
 # Редактор текущей задачи сверху
