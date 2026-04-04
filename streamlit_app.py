@@ -1,3 +1,4 @@
+
 import os
 
 # Создать папку pages, если её нет
@@ -9,5 +10,3 @@ init_file = os.path.join("pages", "__init__.py")
 if not os.path.exists(init_file):
     with open(init_file, "w", encoding="utf-8") as f:
         f.write("# Пакет pages")
-
-
