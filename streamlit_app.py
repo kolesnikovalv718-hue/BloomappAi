@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 
-# -------------2------------
+# -------------1-----------
 # Путь к CSV
 # ---------------------------
 file_path = "blooms_dataset.csv"
