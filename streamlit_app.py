@@ -21,7 +21,6 @@ else:
         "topic": ["Probability"],
         "interdisciplinary": [""]
     })
-
 df = df.fillna("")
 
 # ---------------------------
@@ -58,9 +57,7 @@ def save_csv():
     st.success(f"Сохранено! Файл: {file_path}")
 
 def render_task(idx):
-    # --------------------
     # Редактирование
-    # --------------------
     st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
     st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
     st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
@@ -70,9 +67,7 @@ def render_task(idx):
                              key=f"bloom_{idx}")
     st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
-    # --------------------
     # Предпросмотр с LaTeX
-    # --------------------
     st.markdown("---")
     st.subheader("Предпросмотр задачи")
     st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
@@ -111,20 +106,13 @@ st.info(f"Всего задач: {len(st.session_state.df)}")
 
 cols = st.columns(6)
 with cols[0]:
-    if st.button("Предыдущая"):
-        prev_task()
-        st.experimental_rerun()
+    st.button("Предыдущая", on_click=prev_task)
 with cols[1]:
-    if st.button("Следующая"):
-        next_task()
-        st.experimental_rerun()
+    st.button("Следующая", on_click=next_task)
 with cols[2]:
-    if st.button("Добавить"):
-        add_task()
-        st.experimental_rerun()
+    st.button("Добавить", on_click=add_task)
 with cols[3]:
-    if st.button("Сохранить"):
-        save_csv()
+    st.button("Сохранить", on_click=save_csv)
 with cols[4]:
     st.download_button(
         label="Скачать CSV",
@@ -133,9 +121,7 @@ with cols[4]:
         mime="text/csv"
     )
 with cols[5]:
-    if st.button("Удалить"):
-        delete_task()
-        st.experimental_rerun()
+    st.button("Удалить", on_click=delete_task)
 
 st.markdown("---")
 
