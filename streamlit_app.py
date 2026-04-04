@@ -46,18 +46,19 @@ bloom_colors = {
 # Функции
 # ---------------------------
 def save_csv():
+    global df
     idx = st.session_state.current_index
-    if len(st.session_state.df) > 0:
-        st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", st.session_state.df.loc[idx, "text"])
-        st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", st.session_state.df.loc[idx, "answer"])
-        st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", st.session_state.df.loc[idx, "topic"])
-        st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", st.session_state.df.loc[idx, "interdisciplinary"])
-        st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", st.session_state.df.loc[idx, "bloom"])
-    try:
-        st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
-        st.success("Сохранено!")
-    except Exception as e:
-        st.error(f"Ошибка при сохранении: {e}")
+    if len(df) > 0:
+        # Берём актуальные значения из редактора
+        df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", df.loc[idx, "text"])
+        df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", df.loc[idx, "answer"])
+        df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", df.loc[idx, "topic"])
+        df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", df.loc[idx, "interdisciplinary"])
+        df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", df.loc[idx, "bloom"])
+
+    # Теперь точно сохраняем в файл
+    df.to_csv(file_path, index=False, encoding="utf-8")
+    st.success(f"Сохранено! Файл: {file_path}")
 
 def render_task(idx):
     task = st.session_state.df.loc[idx]
