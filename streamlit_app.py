@@ -1,6 +1,22 @@
+
+Устала посмотри, так как в самом начале:(
+import streamlit as st
+
+st.markdown("""
+<style>
+button {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+# app.py — интерактивный редактор задач Streamlit
 import streamlit as st
 import pandas as pd
 import os
+import streamlit as st
+
 
 # ---------------------------
 # Путь к CSV
@@ -8,23 +24,36 @@ import os
 file_path = "blooms_dataset.csv"
 
 # ---------------------------
-# Инициализация df в сессии
+# Загрузка или создание
 # ---------------------------
-if "df" not in st.session_state:
-    if os.path.exists(file_path):
-        st.session_state.df = pd.read_csv(file_path, encoding='utf-8').fillna("")
-    else:
-        st.session_state.df = pd.DataFrame({
-            "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
-            "answer": [""],
-            "level": ["Знание"],
-            "bloom": ["Remembering"],
-            "topic": ["Probability"],
-            "interdisciplinary": [""]
-        })
-    st.session_state.current_index = 0
+uploaded_file = st.file_uploader("Загрузите CSV с задачами", type=["csv"])
+if uploaded_file:
+    df = pd.read_csv(uploaded_file, encoding='utf-8')
+else:
+    df = pd.DataFrame({
+        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+        "answer": [""],
+        "level": ["Знание"],
+        "bloom": ["Remembering"],
+        "topic": ["Probability"],
+        "interdisciplinary": [""]
+    })
 
-df = st.session_state.df
+if os.path.exists(file_path):
+    df = pd.read_csv(file_path, encoding='utf-8')
+    st.success(f"Файл найден. Загружено {len(df)} задач.")
+else:
+    df = pd.DataFrame({
+        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+        "answer": [""],
+        "level": ["Знание"],
+        "bloom": ["Remembering"],
+        "topic": ["Probability"],
+        "interdisciplinary": [""]
+    })
+    df.to_csv(file_path, index=False, encoding='utf-8')
+
+df = df.fillna("")
 
 # ---------------------------
 # Цвета Bloom
@@ -39,29 +68,27 @@ bloom_colors = {
 }
 
 # ---------------------------
+# Состояние текущей задачи
+# ---------------------------
+if "current_index" not in st.session_state:
+    st.session_state.current_index = 0
+
+# ---------------------------
 # Функции
 # ---------------------------
 def save_csv():
-    st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
-    st.success(f"Сохранено! Всего задач: {len(st.session_state.df)}")
+    df.to_csv(file_path, index=False, encoding="utf-8")
+    st.success("Сохранено!")
 
 def render_task(idx):
     task = df.loc[idx]
-    task["text"] = st.text_area("Задача:", value=task.get("text",""), key=f"text_{idx}")
-    task["answer"] = st.text_area("Ответ:", value=task.get("answer",""), key=f"answer_{idx}")
-    task["topic"] = st.text_input("Тема:", value=task.get("topic",""), key=f"topic_{idx}")
-    task["interdisciplinary"] = st.text_input("Междисциплинарная:", value=task.get("interdisciplinary",""), key=f"inter_{idx}")
-    task["bloom"] = st.selectbox(
-        "Bloom:", 
-        options=list(bloom_colors.keys()), 
-        index=list(bloom_colors.keys()).index(task.get("bloom","Remembering")), 
-        key=f"bloom_{idx}"
-    )
-    st.session_state.df.loc[idx] = task
-    st.markdown(
-        f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", 
-        unsafe_allow_html=True
-    )
+    task["text"] = st.text_area("Задача:", value=task["text"], key=f"text_{idx}")
+    task["answer"] = st.text_area("Ответ:", value=task["answer"], key=f"answer_{idx}")
+    task["topic"] = st.text_input("Тема:", value=task["topic"], key=f"topic_{idx}")
+    task["interdisciplinary"] = st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
+    task["bloom"] = st.selectbox("Bloom:", options=list(bloom_colors.keys()), index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
+    df.loc[idx] = task
+    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", unsafe_allow_html=True)
 
 def prev_task():
     if st.session_state.current_index > 0:
@@ -72,6 +99,7 @@ def next_task():
         st.session_state.current_index += 1
 
 def add_task():
+    global df
     new_row = {
         "text": "",
         "answer": "",
@@ -80,10 +108,9 @@ def add_task():
         "topic": "",
         "interdisciplinary": ""
     }
-    st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_row])], ignore_index=True)
-    st.session_state.current_index = len(st.session_state.df) - 1
-    st.experimental_rerun()
-
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    st.session_state.current_index = len(df) - 1
+    st.rerun()
 # ---------------------------
 # Заголовок
 # ---------------------------
@@ -107,7 +134,7 @@ if filter_bloom != "Все":
 
 # ---------------------------
 # Отображение текущей задачи
-# ---------------------------
+# -render_task(st.session_state.current_index)
 if st.session_state.current_index >= len(df):
     st.session_state.current_index = len(df) - 1
 
@@ -115,9 +142,8 @@ if len(df) > 0:
     render_task(st.session_state.current_index)
 else:
     st.warning("Нет задач")
-
 # ---------------------------
-# Кнопки управления
+# Кнопки управления (как в Colab)
 # ---------------------------
 col1, col2, col3, col4 = st.columns(4)
 with col1:
