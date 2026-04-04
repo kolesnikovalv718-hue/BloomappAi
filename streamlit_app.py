@@ -1,4 +1,4 @@
-# app.py — редактор задач Streamlit
+# app.py — интерактивный редактор задач Streamlit
 import streamlit as st
 import pandas as pd
 import os
@@ -6,7 +6,7 @@ import os
 # ---------------------------
 # Путь к CSV
 # ---------------------------
-file_path = "blooms_dataset.csv"  # Для Streamlit лучше локально рядом с app.py
+file_path = "blooms_dataset.csv"
 
 # ---------------------------
 # Загрузка или создание
@@ -27,8 +27,6 @@ else:
 
 df = df.fillna("")
 
-current_index = 0
-
 # ---------------------------
 # Цвета Bloom
 # ---------------------------
@@ -42,6 +40,12 @@ bloom_colors = {
 }
 
 # ---------------------------
+# Состояние текущей задачи
+# ---------------------------
+if "current_index" not in st.session_state:
+    st.session_state.current_index = 0
+
+# ---------------------------
 # Функции
 # ---------------------------
 def save_csv():
@@ -50,30 +54,23 @@ def save_csv():
 
 def render_task(idx):
     task = df.loc[idx]
-    st.markdown(f"### Задача {idx+1}")
     task["text"] = st.text_area("Задача:", value=task["text"], key=f"text_{idx}")
     task["answer"] = st.text_area("Ответ:", value=task["answer"], key=f"answer_{idx}")
     task["topic"] = st.text_input("Тема:", value=task["topic"], key=f"topic_{idx}")
     task["interdisciplinary"] = st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
     task["bloom"] = st.selectbox("Bloom:", options=list(bloom_colors.keys()), index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
     df.loc[idx] = task
+    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", unsafe_allow_html=True)
 
-# ---------------------------
-# Навигация
-# ---------------------------
-st.sidebar.title("Навигация")
-if "current_index" not in st.session_state:
-    st.session_state.current_index = 0
-
-if st.sidebar.button("Предыдущая"):
+def prev_task():
     if st.session_state.current_index > 0:
         st.session_state.current_index -= 1
 
-if st.sidebar.button("Следующая"):
+def next_task():
     if st.session_state.current_index < len(df) - 1:
         st.session_state.current_index += 1
 
-if st.sidebar.button("Добавить задачу"):
+def add_task():
     df.loc[len(df)] = {
         "text": "",
         "answer": "",
@@ -85,9 +82,14 @@ if st.sidebar.button("Добавить задачу"):
     st.session_state.current_index = len(df) - 1
 
 # ---------------------------
+# Заголовок
+# ---------------------------
+st.title("Редактор задач с Bloom")
+
+# ---------------------------
 # Фильтры
 # ---------------------------
-st.sidebar.markdown("## Фильтры")
+st.sidebar.header("Фильтры")
 filter_topic = st.sidebar.text_input("Фильтр по теме:")
 filter_bloom = st.sidebar.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
 
@@ -101,23 +103,34 @@ if filter_bloom != "Все":
     filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
 
 # ---------------------------
-# Отображение задачи
+# Отображение текущей задачи
 # ---------------------------
 render_task(st.session_state.current_index)
 
 # ---------------------------
+# Кнопки управления (как в Colab)
+# ---------------------------
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    if st.button("Предыдущая"):
+        prev_task()
+with col2:
+    if st.button("Следующая"):
+        next_task()
+with col3:
+    if st.button("Добавить задачу"):
+        add_task()
+with col4:
+    if st.button("Сохранить"):
+        save_csv()
+
+# ---------------------------
 # Список задач
 # ---------------------------
-st.markdown("## Список задач (с фильтром)")
+st.header("Список задач (с фильтром)")
 for i, row in filtered_df.iterrows():
     color = bloom_colors.get(row["bloom"], "black")
     st.markdown(f"**№ {i+1}**: {row['text']}")
     st.markdown(f"Bloom: <span style='color:{color}'>{row['bloom']}</span>", unsafe_allow_html=True)
     st.markdown(f"Тема: {row['topic']}")
     st.markdown("---")
-
-# ---------------------------
-# Сохранение
-# ---------------------------
-if st.button("Сохранить изменения"):
-    save_csv()
