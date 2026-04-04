@@ -52,11 +52,19 @@ def update_df_from_editor(idx):
     st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", "Remembering")
 
 def save_csv():
-    idx = st.session_state.current_index
-    update_df_from_editor(idx)
-    st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
-    st.success(f"Сохранено! Файл: {file_path}")
+    # проходим по всем задачам и берем значения из session_state
+    for idx in range(len(st.session_state.df)):
+        st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", st.session_state.df.loc[idx, "text"])
+        st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", st.session_state.df.loc[idx, "answer"])
+        st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", st.session_state.df.loc[idx, "topic"])
+        st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", st.session_state.df.loc[idx, "interdisciplinary"])
+        st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", st.session_state.df.loc[idx, "bloom"])
 
+    try:
+        st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
+        st.success(f"Сохранено! Файл: {file_path}")
+    except Exception as e:
+        st.error(f"Ошибка при сохранении: {e}")
 def render_task(idx):
     task = st.session_state.df.loc[idx]
     st.text_area("Задача:", value=task["text"], key=f"text_{idx}", height=80)
@@ -74,7 +82,8 @@ def prev_task():
 
 def next_task():
     if st.session_state.current_index < len(st.session_state.df) - 1:
-        st.session_state.current_index += 1
+        st.session_state.current_inde
+        x += 1
 
 def add_task():
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
