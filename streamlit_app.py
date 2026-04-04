@@ -1,17 +1,19 @@
+
 import streamlit as st
 import pandas as pd
 import os
 
 # ---------------------------
-# Стили кнопок
+# CSS для кнопок
 # ---------------------------
 st.markdown("""
 <style>
-button {
+div.stButton > button {
     background-color: #4CAF50 !important;
     color: white !important;
     border-radius: 8px !important;
     margin: 2px;
+    width: 100%;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -57,21 +59,19 @@ if "current_index" not in st.session_state:
 # Функции
 # ---------------------------
 def save_csv():
-    global df
     idx = st.session_state.current_index
     if len(df) > 0:
-        # Обновляем df из текущих значений редактирования
         df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", df.loc[idx, "text"])
         df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", df.loc[idx, "answer"])
         df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", df.loc[idx, "topic"])
         df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", df.loc[idx, "interdisciplinary"])
         df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", df.loc[idx, "bloom"])
-
     try:
         df.to_csv(file_path, index=False, encoding="utf-8")
         st.success(f"Сохранено! Файл: {file_path}")
     except Exception as e:
         st.error(f"Ошибка при сохранении: {e}")
+
 def render_task(idx):
     task = df.loc[idx]
     task["text"] = st.text_area("Задача:", value=task["text"], key=f"text_{idx}")
@@ -92,20 +92,30 @@ def next_task():
     if st.session_state.current_index < len(df) - 1:
         st.session_state.current_index += 1
 
-def add_task(
-    
-):
+def add_task():
     global df
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     st.session_state.current_index = len(df) - 1
-    st.rerun()
+    st.experimental_rerun()
+
+def delete_task():
+    idx = st.session_state.current_index
+    if len(df) > 0:
+        df.drop(idx, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        st.session_state.current_index = max(0, idx-1)
+        st.experimental_rerun()
 
 # ---------------------------
-# Заголовок и кнопки сверху
+# Заголовок
 # ---------------------------
 st.title("Редактор задач с Bloom")
-cols = st.columns([1,1,1,1])
+
+# ---------------------------
+# Кнопки редактора в одну линию
+# ---------------------------
+cols = st.columns(6)
 with cols[0]:
     if st.button("Предыдущая"):
         prev_task()
@@ -113,31 +123,34 @@ with cols[1]:
     if st.button("Следующая"):
         next_task()
 with cols[2]:
-    if st.button("Добавить задачу"):
+    if st.button("Добавить"):
         add_task()
 with cols[3]:
     if st.button("Сохранить"):
         save_csv()
-# ---------------------------
-# Кнопка скачивания CSV
-# ---------------------------
-st.download_button(
-    label="Скачать CSV",
-    data=open(file_path, "rb").read(),  # читаем файл в байтах
-    file_name="blooms_dataset.csv",
-    mime="text/csv"
-)
+with cols[4]:
+    st.download_button(
+        label="Скачать CSV",
+        data=open(file_path, "rb").read(),
+        file_name="blooms_dataset.csv",
+        mime="text/csv"
+    )
+with cols[5]:
+    if st.button("Удалить"):
+        delete_task()
 
 # ---------------------------
-# Редактор текущей задачи сверху
+# Редактор текущей задачи
 # ---------------------------
 if len(df) > 0:
     render_task(st.session_state.current_index)
 else:
     st.warning("Нет задач")
 
+st.markdown("---")
+
 # ---------------------------
-# Фильтры и список задач внизу
+# Фильтры и список задач
 # ---------------------------
 st.sidebar.header("Фильтры")
 filter_topic = st.sidebar.text_input("Фильтр по теме:")
