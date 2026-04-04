@@ -1,3 +1,14 @@
+import streamlit as st
+
+st.markdown("""
+<style>
+button {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 # app.py — интерактивный редактор задач Streamlit
 import streamlit as st
 import pandas as pd
