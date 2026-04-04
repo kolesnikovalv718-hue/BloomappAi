@@ -1,0 +1,60 @@
+text,level,bloom,topic,interdisciplinary,answer
+"Задача 1: Напишите программу, которая создаёт переменную x со значением 3.14 и выводит её тип с помощью функции type()",Применение,Applying,Python basics,,type(3.14)
+Назвать результат выражения 5 + 2 * 3,Знание,Remembering,Python basics,,5 + 2 * 3
+Указать оператор проверки равенства в Python,Знание,Remembering,Python basics,,5 == 5
+Перечислить основные типы данных Python,Знание,Remembering,Python basics,,"int, float, str, list, dict, bool"
+Определить значение len('Python'),Знание,Remembering,Python basics,,len('Python')
+Назвать основные арифметические операторы Python,Знание,Remembering,Python basics,,"+, -, *, /, //, %, **"
+"Определить результат len([1,2,3,4])",Применение,Applying,Python basics,,"len([1,2,3,4])"
+Назвать тип данных числа 10,Применение,Applying,Python basics,,type(10)
+Определить оператор сложения в Python,Применение,Applying,Python basics,,1 + 1
+Назвать результат выражения 8 - 3,Применение,Applying,Python basics,,8 - 3
+Объяснить разницу между списком и строкой,Применение,Applying,Python basics,,"# Список изменяемый, строка нет"
+Интерпретировать результат цикла range(5),Применение,Applying,Python basics,,list(range(5))
+Описать назначение return,Применение,Applying,Python basics,,def f(): return 42
+Сравнить append() и extend(),Применение,Applying,Python basics,,"lst.append(1); lst.extend([2,3])"
+Объяснить назначение split(),Применение,Applying,Python basics,,'a b c'.split()
+Объяснить работу цикла for,Применение,Applying,Python basics,,for i in range(5): print(i)
+Интерпретировать результат input(),Применение,Applying,Python basics,,input('Введите значение: ')
+Объяснить работу цикла while,Применение,Applying,Python basics,,while False: pass
+Интерпретировать результат выражения 10//3,Применение,Applying,Python basics,,10 // 3
+Объяснить назначение функции,Применение,Applying,Python basics,,def func(): pass
+Определить чётность числа,Применение,Applying,Python basics,,n % 2 == 0
+Вычислить сумму чисел от 1 до n,Применение,Applying,Python basics,,"sum(range(1, n+1))"
+Смоделировать вероятность брака деталей методом random,Применение,Applying,Python basics,,import random; random.random() < 0.1
+Смоделировать 1000 бросков кубика,Применение,Applying,Python basics,,"import random; [random.randint(1,6) for _ in range(1000)]"
+Построить таблицу y = x^2 для x от 1 до 10,Применение,Applying,Python basics,,"[x**2 for x in range(1,11)]"
+Смоделировать 365 дней погоды при вероятности дождя 0.2,Применение,Applying,Python basics,,import random; ['rain' if random.random() < 0.2 else 'sun' for _ in range(365)]
+Смоделировать угадывание теста из 20 вопросов,Применение,Applying,Python basics,,# Симуляция угадывания теста из 20 вопросов
+Рассчитать кинетическую энергию тела,Применение,Applying,Python basics,,0.5 * m * v**2
+Вычислить путь движения тела при свободном падении,Применение,Applying,Python basics,,0.5 * 9.8 * t**2
+Рассчитать вероятность покупки товара,Применение,Applying,Python basics,,p = success_count / total_count
+Написать программу поиска максимума списка,Применение,Applying,Python basics,,max(lst)
+Написать программу сортировки списка,Применение,Applying,Python basics,,lst.sort()
+Создать программу поиска суммы списка,Применение,Applying,Python basics,,sum(lst)
+Написать программу вычисления площади круга,Применение,Applying,Python basics,,3.14 * r**2
+Смоделировать бросок монеты 1000 раз,Применение,Applying,Python basics,,"[random.choice(['орёл','решка']) for _ in range(1000)]"
+Найти логическую ошибку в коде Python,Применение,Applying,Python basics,,# Проверить синтаксис и логику кода
+Определить причину неправильной работы цикла,Применение,Applying,Python basics,,# Ошибка в условии цикла
+Сравнить список и словарь,Применение,Applying,Python basics,,# Список [ ] и словарь { }
+Выявить неэффективную операцию в программе,Применение,Applying,Python basics,,# Неэффективная операция – лишний цикл
+Классифицировать тип ошибки,Применение,Applying,Python basics,,# Синтаксическая или логическая ошибка
+Проанализировать код и найти логическую ошибку,Применение,Applying,Python basics,,# Проанализировать и исправить код
+Определить причину ошибки цикла,Применение,Applying,Python basics,,# Неверное условие цикла
+Сравнить эффективность списка и словаря,Применение,Applying,Python basics,,# Сравнение эффективности списка и словаря
+Выявить избыточные операции,Применение,Applying,Python basics,,# Удалить лишние вычисления
+Проанализировать эффективность списка и множества,Применение,Applying,Python basics,,# Использовать set вместо list для уникальных
+Оценить алгоритм сортировки,Применение,Applying,Python basics,,"# Сортировка пузырьком, быстрая сортировка"
+Обосновать выбор структуры данных,Применение,Applying,Python basics,,# Выбор подходящей структуры данных
+Выбрать способ обработки текста,Применение,Applying,Python basics,,"# Применение split(), replace(), join()"
+Аргументировать использование цикла,Применение,Applying,Python basics,,# Аргументация использования цикла for
+Оценить корректность алгоритма,Применение,Applying,Python basics,,# Проверка корректности алгоритма
+Оценить корректность алгоритма сортировки,Применение,Applying,Python basics,,# Оценка алгоритма сортировки
+Обосновать выбор алгоритма,Применение,Applying,Python basics,,# Выбор собственного алгоритма
+Оценить эффективность программы,Применение,Applying,Python basics,,# Сравнение времени работы программы
+Разработать программу моделирования случайного события,Применение,Applying,Python basics,,# Моделирование случайного события
+Создать программу обработки массива,Применение,Applying,Python basics,,# Обработка массива данных
+Разработать программу анализа случайных событий,Применение,Applying,Python basics,,# Анализ случайных событий
+Создать программу обработки числового массива,Применение,Applying,Python basics,,# Обработка числового массива
+Разработать программу генерации случайных чисел,Применение,Applying,Python basics,,# Генерация случайных чисел
+Создать программу моделирования эксперимента,Применение,Applying,Python basics,,# Моделирование эксперимента
