@@ -57,22 +57,57 @@ def save_csv():
     st.success(f"Сохранено! Файл: {file_path}")
 
 def render_task(idx):
-    # Редактирование
-    st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
-    st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
-    st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
-    st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
-    bloom_val = st.selectbox("Bloom:", options=list(bloom_colors.keys()),
-                             index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
-                             key=f"bloom_{idx}")
+    # --------------------
+    # Редактирование с живым предпросмотром
+    # --------------------
+    def update_preview():
+        st.session_state.preview_dirty = True
+
+    st.text_area(
+        "Задача:",
+        value=st.session_state.df.loc[idx, "text"],
+        key=f"text_{idx}",
+        height=80,
+        on_change=update_preview
+    )
+    st.text_area(
+        "Ответ:",
+        value=st.session_state.df.loc[idx, "answer"],
+        key=f"answer_{idx}",
+        height=80,
+        on_change=update_preview
+    )
+    st.text_input(
+        "Тема:",
+        value=st.session_state.df.loc[idx, "topic"],
+        key=f"topic_{idx}",
+        on_change=update_preview
+    )
+    st.text_input(
+        "Междисциплинарная:",
+        value=st.session_state.df.loc[idx, "interdisciplinary"],
+        key=f"inter_{idx}",
+        on_change=update_preview
+    )
+    bloom_val = st.selectbox(
+        "Bloom:",
+        options=list(bloom_colors.keys()),
+        index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
+        key=f"bloom_{idx}",
+        on_change=update_preview
+    )
     st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
-    # Предпросмотр с LaTeX
-    st.markdown("---")
-    st.subheader("Предпросмотр задачи")
-    st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
-    st.markdown("**Ответ:**")
-    st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
+    # --------------------
+    # Живой предпросмотр с LaTeX
+    # --------------------
+    if st.session_state.get("preview_dirty", True):
+        st.markdown("---")
+        st.subheader("Предпросмотр задачи")
+        st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
+        st.markdown("**Ответ:**")
+        st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
+        st.session_state.preview_dirty = False
 
 def next_task():
     save_current_task()
@@ -125,7 +160,7 @@ with cols[5]:
 
 st.markdown("---")
 
-# Редактор текущей задачи с предпросмотром LaTeX
+# Редактор текущей задачи с живым предпросмотром
 if len(st.session_state.df) > 0:
     render_task(st.session_state.current_index)
 else:
