@@ -83,14 +83,12 @@ def next_task():
     save_current_task()
     if st.session_state.current_index < len(st.session_state.df) - 1:
         st.session_state.current_index += 1
-        st.experimental_rerun()  # <- добавлено для обновления интерфейса
 
 def prev_task():
     save_current_task()
     if st.session_state.current_index > 0:
         st.session_state.current_index -= 1
-        st.experimental_rerun()  # <- добавлено для обновления интерфейса
-        
+
 def add_task():
     save_current_task()
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
@@ -115,12 +113,15 @@ cols = st.columns(6)
 with cols[0]:
     if st.button("Предыдущая"):
         prev_task()
+        st.experimental_rerun()
 with cols[1]:
     if st.button("Следующая"):
         next_task()
+        st.experimental_rerun()
 with cols[2]:
     if st.button("Добавить"):
         add_task()
+        st.experimental_rerun()
 with cols[3]:
     if st.button("Сохранить"):
         save_csv()
@@ -134,6 +135,7 @@ with cols[4]:
 with cols[5]:
     if st.button("Удалить"):
         delete_task()
+        st.experimental_rerun()
 
 st.markdown("---")
 
