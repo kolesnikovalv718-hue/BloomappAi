@@ -8,13 +8,15 @@ import os
 # ---------------------------
 st.markdown("""
 <style>
-button {
-    background-color: #4CAF50 !important;
-    color: white !important;
-    border-radius: 8px !important;
+div.stButton > button:first-child {
     height: 3em;
-    width: 100%;
+    border-radius: 8px;
+    color: white;
 }
+div.stButton > button:nth-child(1) {background-color: gray;}
+div.stButton > button:nth-child(2) {background-color: blue;}
+div.stButton > button:nth-child(3) {background-color: green;}
+div.stButton > button:nth-child(4) {background-color: red;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -24,26 +26,23 @@ button {
 file_path = "blooms_dataset.csv"
 
 # ---------------------------
-# Загрузка или создание
+# Инициализация df в сессии
 # ---------------------------
-uploaded_file = st.file_uploader("Загрузите CSV с задачами", type=["csv"])
-if uploaded_file:
-    df = pd.read_csv(uploaded_file, encoding='utf-8')
-elif os.path.exists(file_path):
-    df = pd.read_csv(file_path, encoding='utf-8')
-    st.success(f"Файл найден. Загружено {len(df)} задач.")
-else:
-    df = pd.DataFrame({
-        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
-        "answer": [""],
-        "level": ["Знание"],
-        "bloom": ["Remembering"],
-        "topic": ["Probability"],
-        "interdisciplinary": [""]
-    })
-    df.to_csv(file_path, index=False, encoding='utf-8')
+if "df" not in st.session_state:
+    if os.path.exists(file_path):
+        st.session_state.df = pd.read_csv(file_path, encoding='utf-8').fillna("")
+    else:
+        st.session_state.df = pd.DataFrame({
+            "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+            "answer": [""],
+            "level": ["Знание"],
+            "bloom": ["Remembering"],
+            "topic": ["Probability"],
+            "interdisciplinary": [""]
+        })
+    st.session_state.current_index = 0
 
-df = df.fillna("")
+df = st.session_state.df
 
 # ---------------------------
 # Цвета Bloom
@@ -58,17 +57,11 @@ bloom_colors = {
 }
 
 # ---------------------------
-# Состояние текущей задачи
-# ---------------------------
-if "current_index" not in st.session_state:
-    st.session_state.current_index = 0
-
-# ---------------------------
 # Функции
 # ---------------------------
 def save_csv():
-    df.to_csv(file_path, index=False, encoding="utf-8")
-    st.success(f"Сохранено! Всего задач: {len(df)}")
+    st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
+    st.success(f"Сохранено! Всего задач: {len(st.session_state.df)}")
 
 def render_task(idx):
     task = df.loc[idx]
@@ -82,7 +75,7 @@ def render_task(idx):
         index=list(bloom_colors.keys()).index(task.get("bloom","Remembering")), 
         key=f"bloom_{idx}"
     )
-    df.loc[idx] = task
+    st.session_state.df.loc[idx] = task
     st.markdown(
         f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", 
         unsafe_allow_html=True
@@ -97,7 +90,6 @@ def next_task():
         st.session_state.current_index += 1
 
 def add_task():
-    global df
     new_row = {
         "text": "",
         "answer": "",
@@ -106,9 +98,8 @@ def add_task():
         "topic": "",
         "interdisciplinary": ""
     }
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    df.to_csv(file_path, index=False, encoding="utf-8")
-    st.session_state.current_index = len(df) - 1
+    st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_row])], ignore_index=True)
+    st.session_state.current_index = len(st.session_state.df) - 1
     st.experimental_rerun()
 
 # ---------------------------
