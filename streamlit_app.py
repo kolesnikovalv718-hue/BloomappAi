@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # ---------------------------
-# Настройки CSV
+# Путь к CSV
 # ---------------------------
 file_path = "blooms_dataset.csv"
 
@@ -21,10 +21,11 @@ else:
         "topic": ["Probability"],
         "interdisciplinary": [""]
     })
+
 df = df.fillna("")
 
 # ---------------------------
-# Инициализация session_state
+# Session state
 # ---------------------------
 if "df" not in st.session_state:
     st.session_state.df = df.copy()
@@ -43,47 +44,37 @@ bloom_colors = {
 # ---------------------------
 # Функции
 # ---------------------------
-def update_df_from_editor(idx):
-    """Обновляем df из session_state перед сохранением"""
-    st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", "")
-    st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", "")
-    st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", "")
-    st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", "")
-    st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", "Remembering")
+def save_current_task():
+    idx = st.session_state.current_index
+    st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", st.session_state.df.loc[idx, "text"])
+    st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", st.session_state.df.loc[idx, "answer"])
+    st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", st.session_state.df.loc[idx, "topic"])
+    st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", st.session_state.df.loc[idx, "interdisciplinary"])
+    st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", st.session_state.df.loc[idx, "bloom"])
 
 def save_csv():
-    # проходим по всем задачам и берем значения из session_state
-    for idx in range(len(st.session_state.df)):
-        st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", st.session_state.df.loc[idx, "text"])
-        st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", st.session_state.df.loc[idx, "answer"])
-        st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", st.session_state.df.loc[idx, "topic"])
-        st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", st.session_state.df.loc[idx, "interdisciplinary"])
-        st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", st.session_state.df.loc[idx, "bloom"])
+    save_current_task()
+    st.session_state.df.to_csv(file_path, index=False, encoding='utf-8')
+    st.success(f"Сохранено! Файл: {file_path}")
 
-    try:
-        st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
-        st.success(f"Сохранено! Файл: {file_path}")
-    except Exception as e:
-        st.error(f"Ошибка при сохранении: {e}")
 def render_task(idx):
     task = st.session_state.df.loc[idx]
     st.text_area("Задача:", value=task["text"], key=f"text_{idx}", height=80)
     st.text_area("Ответ:", value=task["answer"], key=f"answer_{idx}", height=80)
     st.text_input("Тема:", value=task["topic"], key=f"topic_{idx}")
-    st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
-    st.selectbox("Bloom:", options=list(bloom_colors.keys()),
-                 index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
-    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>",
-                unsafe_allow_html=True)
+    st.text_input("Междисциплинарная:", value=task["inter_{idx}"], key=f"inter_{idx}")
+    st.selectbox("Bloom:", options=list(bloom_colors.keys()), index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
+    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", unsafe_allow_html=True)
 
 def prev_task():
+    save_current_task()
     if st.session_state.current_index > 0:
         st.session_state.current_index -= 1
 
 def next_task():
+    save_current_task()
     if st.session_state.current_index < len(st.session_state.df) - 1:
-        st.session_state.current_inde
-        x += 1
+        st.session_state.current_index += 1
 
 def add_task():
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
@@ -98,14 +89,11 @@ def delete_task():
         st.session_state.current_index = max(0, idx-1)
 
 # ---------------------------
-# Заголовок и информация
+# Интерфейс
 # ---------------------------
 st.title("Редактор задач с Bloom")
 st.info(f"Всего задач: {len(st.session_state.df)}")
 
-# ---------------------------
-# Кнопки управления в одной линии
-# ---------------------------
 cols = st.columns(6)
 with cols[0]:
     if st.button("Предыдущая"):
@@ -132,9 +120,7 @@ with cols[5]:
 
 st.markdown("---")
 
-# ---------------------------
 # Редактор текущей задачи
-# ---------------------------
 if len(st.session_state.df) > 0:
     render_task(st.session_state.current_index)
 else:
@@ -142,9 +128,7 @@ else:
 
 st.markdown("---")
 
-# ---------------------------
 # Фильтры и список задач
-# ---------------------------
 st.header("Список задач")
 filter_topic = st.text_input("Фильтр по теме:")
 filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
@@ -160,6 +144,4 @@ if len(filtered_df) == 0:
 else:
     for i, row in filtered_df.iterrows():
         color = bloom_colors.get(row["bloom"], "black")
-        st.markdown(f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** "
-                    f"<span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}",
-                    unsafe_allow_html=True)
+        st.markdown(f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}", unsafe_allow_html=True)
