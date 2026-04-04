@@ -62,7 +62,8 @@ def render_task(idx):
     st.text_area("Задача:", value=task["text"], key=f"text_{idx}", height=80)
     st.text_area("Ответ:", value=task["answer"], key=f"answer_{idx}", height=80)
     st.text_input("Тема:", value=task["topic"], key=f"topic_{idx}")
-    st.text_input("Междисциплинарная:", value=task["inter_{idx}"], key=f"inter_{idx}")
+    st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
+    
     st.selectbox("Bloom:", options=list(bloom_colors.keys()), index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
     st.markdown(f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", unsafe_allow_html=True)
 
