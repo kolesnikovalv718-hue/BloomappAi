@@ -105,7 +105,7 @@ def add_task():
         "topic": "",
         "interdisciplinary": ""
     }
-   st.session_state.current_index = len(df.index) - 1
+    st.session_state.current_index = len(df.index) - 1
 
 # ---------------------------
 # Заголовок
