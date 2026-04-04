@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import os
@@ -46,11 +47,11 @@ bloom_colors = {
 # ---------------------------
 def save_current_task():
     idx = st.session_state.current_index
-    st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", st.session_state.df.loc[idx, "text"])
-    st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", st.session_state.df.loc[idx, "answer"])
-    st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", st.session_state.df.loc[idx, "topic"])
-    st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", st.session_state.df.loc[idx, "interdisciplinary"])
-    st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", st.session_state.df.loc[idx, "bloom"])
+    st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", "")
+    st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", "")
+    st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", "")
+    st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", "")
+    st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", "Remembering")
 
 def save_csv():
     save_current_task()
@@ -58,29 +59,15 @@ def save_csv():
     st.success(f"Сохранено! Файл: {file_path}")
 
 def render_task(idx):
-    # Задача
-    text_val = st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
-    st.session_state.df.loc[idx, "text"] = text_val  # сразу обновляем df
-
-    # Ответ
-    answer_val = st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
-    st.session_state.df.loc[idx, "answer"] = answer_val
-
-    # Тема
-    topic_val = st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
-    st.session_state.df.loc[idx, "topic"] = topic_val
-
-    # Междисциплинарная
-    inter_val = st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
-    st.session_state.df.loc[idx, "interdisciplinary"] = inter_val
-
-    # Bloom
+    # Отображаем элементы для редактирования
+    st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
+    st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
+    st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
+    st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
     bloom_val = st.selectbox("Bloom:", options=list(bloom_colors.keys()),
-                             index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]), key=f"bloom_{idx}")
-    st.session_state.df.loc[idx, "bloom"] = bloom_val
-
-    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>",
-                unsafe_allow_html=True)
+                             index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
+                             key=f"bloom_{idx}")
+    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
 def prev_task():
     save_current_task()
@@ -93,11 +80,13 @@ def next_task():
         st.session_state.current_index += 1
 
 def add_task():
+    save_current_task()
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
     st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_row])], ignore_index=True)
     st.session_state.current_index = len(st.session_state.df) - 1
 
 def delete_task():
+    save_current_task()
     idx = st.session_state.current_index
     if len(st.session_state.df) > 0:
         st.session_state.df.drop(idx, inplace=True)
@@ -144,7 +133,7 @@ else:
 
 st.markdown("---")
 
-# Фильтры и список задач
+# Список задач с фильтрами
 st.header("Список задач")
 filter_topic = st.text_input("Фильтр по теме:")
 filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
