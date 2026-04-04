@@ -11,6 +11,19 @@ file_path = "blooms_dataset.csv"
 # ---------------------------
 # Загрузка или создание
 # ---------------------------
+uploaded_file = st.file_uploader("Загрузите CSV с задачами", type=["csv"])
+if uploaded_file:
+    df = pd.read_csv(uploaded_file, encoding='utf-8')
+else:
+    df = pd.DataFrame({
+        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+        "answer": [""],
+        "level": ["Знание"],
+        "bloom": ["Remembering"],
+        "topic": ["Probability"],
+        "interdisciplinary": [""]
+    })
+
 if os.path.exists(file_path):
     df = pd.read_csv(file_path, encoding='utf-8')
     st.success(f"Файл найден. Загружено {len(df)} задач.")
