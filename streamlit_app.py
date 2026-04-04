@@ -128,12 +128,24 @@ filter_bloom = st.sidebar.selectbox("Фильтр Bloom:", options=["Все"] + 
 # ---------------------------
 # Применение фильтров
 # ---------------------------
+# Применение фильтров для списка
 filtered_df = df.copy()
 if filter_topic:
     filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
 if filter_bloom != "Все":
     filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
 
+st.header("Список задач (с фильтром)")
+if len(filtered_df) == 0:
+    st.warning("По фильтру нет задач")
+else:
+    for i, row in filtered_df.iterrows():
+        color = bloom_colors.get(row["bloom"], "black")
+        st.markdown(f"**№ {i+1}**: {row['text']}")
+        st.markdown(f"Bloom: <span style='color:{color}'>{row['bloom']}</span>", unsafe_allow_html=True)
+        st.markdown(f"Тема: {row['topic']}")
+        st.markdown("---")
+        
 # ---------------------------
 # Отображение текущей задачи
 # -render_task(st.session_state.current_index)
