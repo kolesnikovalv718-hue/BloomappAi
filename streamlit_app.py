@@ -57,8 +57,12 @@ if "current_index" not in st.session_state:
 # Функции
 # ---------------------------
 def save_csv():
-    df.to_csv(file_path, index=False, encoding="utf-8")
-    st.success("Сохранено!")
+    global df  # обязательно, чтобы функция использовала актуальный df
+    try:
+        df.to_csv(file_path, index=False, encoding="utf-8")
+        st.success(f"Сохранено! Файл: {file_path}")
+    except Exception as e:
+        st.error(f"Ошибка при сохранении: {e}")
 
 def render_task(idx):
     task = df.loc[idx]
