@@ -79,16 +79,18 @@ def render_task(idx):
     st.markdown("**Ответ:**")
     st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
-def prev_task():
-    save_current_task()
-    if st.session_state.current_index > 0:
-        st.session_state.current_index -= 1
-
 def next_task():
     save_current_task()
     if st.session_state.current_index < len(st.session_state.df) - 1:
         st.session_state.current_index += 1
+        st.experimental_rerun()  # <- добавлено для обновления интерфейса
 
+def prev_task():
+    save_current_task()
+    if st.session_state.current_index > 0:
+        st.session_state.current_index -= 1
+        st.experimental_rerun()  # <- добавлено для обновления интерфейса
+        
 def add_task():
     save_current_task()
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
