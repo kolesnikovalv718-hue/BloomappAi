@@ -92,20 +92,22 @@ def next_task():
     if st.session_state.current_index < len(df) - 1:
         st.session_state.current_index += 1
 
+# Инициализация df в session_state
+if "df" not in st.session_state:
+    st.session_state.df = df.copy()
+df = st.session_state.df
+
 def add_task():
-    global df
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    st.session_state.current_index = len(df) - 1
-    st.experimental_rerun()
+    st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_row])], ignore_index=True)
+    st.session_state.current_index = len(st.session_state.df) - 1
 
 def delete_task():
     idx = st.session_state.current_index
-    if len(df) > 0:
-        df.drop(idx, inplace=True)
-        df.reset_index(drop=True, inplace=True)
+    if len(st.session_state.df) > 0:
+        st.session_state.df.drop(idx, inplace=True)
+        st.session_state.df.reset_index(drop=True, inplace=True)
         st.session_state.current_index = max(0, idx-1)
-        st.experimental_rerun()
 
 # ---------------------------
 # Заголовок
