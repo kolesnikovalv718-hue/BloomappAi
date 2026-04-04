@@ -1,4 +1,4 @@
-import streamlit as st
+неimport streamlit as st
 
 st.markdown("""
 <style>
@@ -105,7 +105,7 @@ def add_task():
         "topic": "",
         "interdisciplinary": ""
     }
-    st.session_state.current_index = len(df) - 1
+   st.session_state.current_index = len(df.index) - 1
 
 # ---------------------------
 # Заголовок
@@ -130,9 +130,14 @@ if filter_bloom != "Все":
 
 # ---------------------------
 # Отображение текущей задачи
-# ---------------------------
-render_task(st.session_state.current_index)
+# -render_task(st.session_state.current_index)
+if st.session_state.current_index >= len(df):
+    st.session_state.current_index = len(df) - 1
 
+if len(df) > 0:
+    render_task(st.session_state.current_index)
+else:
+    st.warning("Нет задач")
 # ---------------------------
 # Кнопки управления (как в Colab)
 # ---------------------------
