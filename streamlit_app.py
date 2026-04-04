@@ -97,7 +97,8 @@ def next_task():
         st.session_state.current_index += 1
 
 def add_task():
-    df.loc[len(df)] = {
+    global df
+    new_row = {
         "text": "",
         "answer": "",
         "level": "",
@@ -105,8 +106,9 @@ def add_task():
         "topic": "",
         "interdisciplinary": ""
     }
-    st.session_state.current_index = len(df.index) - 1
-
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    st.session_state.current_index = len(df) - 1
+    st.rerun()
 # ---------------------------
 # Заголовок
 # ---------------------------
