@@ -57,13 +57,21 @@ if "current_index" not in st.session_state:
 # Функции
 # ---------------------------
 def save_csv():
-    global df  # обязательно, чтобы функция использовала актуальный df
+    global df
+    idx = st.session_state.current_index
+    if len(df) > 0:
+        # Обновляем df из текущих значений редактирования
+        df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", df.loc[idx, "text"])
+        df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", df.loc[idx, "answer"])
+        df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", df.loc[idx, "topic"])
+        df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", df.loc[idx, "interdisciplinary"])
+        df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", df.loc[idx, "bloom"])
+
     try:
         df.to_csv(file_path, index=False, encoding="utf-8")
         st.success(f"Сохранено! Файл: {file_path}")
     except Exception as e:
         st.error(f"Ошибка при сохранении: {e}")
-
 def render_task(idx):
     task = df.loc[idx]
     task["text"] = st.text_area("Задача:", value=task["text"], key=f"text_{idx}")
@@ -84,7 +92,9 @@ def next_task():
     if st.session_state.current_index < len(df) - 1:
         st.session_state.current_index += 1
 
-def add_task():
+def add_task(
+    
+):
     global df
     new_row = {"text": "", "answer": "", "level": "", "bloom": "Remembering", "topic": "", "interdisciplinary": ""}
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
