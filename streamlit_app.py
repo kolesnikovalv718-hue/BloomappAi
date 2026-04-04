@@ -1,6 +1,11 @@
 
 import streamlit as st
+import pandas as pd
+import os
 
+# ---------------------------
+# Стили кнопок
+# ---------------------------
 st.markdown("""
 <style>
 button {
@@ -10,12 +15,6 @@ button {
 }
 </style>
 """, unsafe_allow_html=True)
-# app.py — интерактивный редактор задач Streamlit
-import streamlit as st
-import pandas as pd
-import os
-import streamlit as st
-
 
 # ---------------------------
 # Путь к CSV
@@ -23,25 +22,13 @@ import streamlit as st
 file_path = "blooms_dataset.csv"
 
 # ---------------------------
-# Загрузка или создание
+# Загрузка или создание CSV
 # ---------------------------
 uploaded_file = st.file_uploader("Загрузите CSV с задачами", type=["csv"])
 if uploaded_file:
     df = pd.read_csv(uploaded_file, encoding='utf-8')
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file, encoding='utf-8')
-        st.success(f"Загружено {len(df)} задач из CSV.")
-else:
-    df = pd.DataFrame({
-        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
-        "answer": [""],
-        "level": ["Знание"],
-        "bloom": ["Remembering"],
-        "topic": ["Probability"],
-        "interdisciplinary": [""]
-    })
-
-if os.path.exists(file_path):
+    st.success(f"Загружено {len(df)} задач из CSV.")
+elif os.path.exists(file_path):
     df = pd.read_csv(file_path, encoding='utf-8')
     st.success(f"Файл найден. Загружено {len(df)} задач.")
 else:
@@ -76,7 +63,7 @@ if "current_index" not in st.session_state:
     st.session_state.current_index = 0
 
 # ---------------------------
-# Функции
+# Функции редактирования
 # ---------------------------
 def save_csv():
     df.to_csv(file_path, index=False, encoding="utf-8")
@@ -113,51 +100,14 @@ def add_task():
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     st.session_state.current_index = len(df) - 1
     st.rerun()
+
 # ---------------------------
 # Заголовок
 # ---------------------------
 st.title("Редактор задач с Bloom")
 
 # ---------------------------
-# Фильтры
-# ---------------------------
-st.sidebar.header("Фильтры")
-filter_topic = st.sidebar.text_input("Фильтр по теме:")
-filter_bloom = st.sidebar.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
-
-# ---------------------------
-# Применение фильтров
-# ---------------------------
-# Применение фильтров для списка
-filtered_df = df.copy()
-if filter_topic:
-    filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
-if filter_bloom != "Все":
-    filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
-
-st.header("Список задач (с фильтром)")
-if len(filtered_df) == 0:
-    st.warning("По фильтру нет задач")
-else:
-    for i, row in filtered_df.iterrows():
-        color = bloom_colors.get(row["bloom"], "black")
-        st.markdown(f"**№ {i+1}**: {row['text']}")
-        st.markdown(f"Bloom: <span style='color:{color}'>{row['bloom']}</span>", unsafe_allow_html=True)
-        st.markdown(f"Тема: {row['topic']}")
-        st.markdown("---")
-        
-# ---------------------------
-# Отображение текущей задачи
-# -render_task(st.session_state.current_index)
-if st.session_state.current_index >= len(df):
-    st.session_state.current_index = len(df) - 1
-
-if len(df) > 0:
-    render_task(st.session_state.current_index)
-else:
-    st.warning("Нет задач")
-# ---------------------------
-# Кнопки управления (как в Colab)
+# Кнопки управления (редактор сверху)
 # ---------------------------
 col1, col2, col3, col4 = st.columns(4)
 with col1:
@@ -174,12 +124,36 @@ with col4:
         save_csv()
 
 # ---------------------------
-# Список задач
+# Отображение текущей задачи (сверху)
 # ---------------------------
+if st.session_state.current_index >= len(df):
+    st.session_state.current_index = len(df) - 1
+
+if len(df) > 0:
+    render_task(st.session_state.current_index)
+else:
+    st.warning("Нет задач")
+
+# ---------------------------
+# Фильтры (список внизу)
+# ---------------------------
+st.sidebar.header("Фильтры")
+filter_topic = st.sidebar.text_input("Фильтр по теме:")
+filter_bloom = st.sidebar.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
+
+filtered_df = df.copy()
+if filter_topic:
+    filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
+if filter_bloom != "Все":
+    filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
+
 st.header("Список задач (с фильтром)")
-for i, row in filtered_df.iterrows():
-    color = bloom_colors.get(row["bloom"], "black")
-    st.markdown(f"**№ {i+1}**: {row['text']}")
-    st.markdown(f"Bloom: <span style='color:{color}'>{row['bloom']}</span>", unsafe_allow_html=True)
-    st.markdown(f"Тема: {row['topic']}")
-    st.markdown("---")
+if len(filtered_df) == 0:
+    st.warning("По фильтру нет задач")
+else:
+    for i, row in filtered_df.iterrows():
+        color = bloom_colors.get(row["bloom"], "black")
+        st.markdown(f"**№ {i+1}**: {row['text']}")
+        st.markdown(f"Bloom: <span style='color:{color}'>{row['bloom']}</span>", unsafe_allow_html=True)
+        st.markdown(f"Тема: {row['topic']}")
+        st.markdown("---")
