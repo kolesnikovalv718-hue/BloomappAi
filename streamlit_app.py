@@ -58,14 +58,29 @@ def save_csv():
     st.success(f"Сохранено! Файл: {file_path}")
 
 def render_task(idx):
-    task = st.session_state.df.loc[idx]
-    st.text_area("Задача:", value=task["text"], key=f"text_{idx}", height=80)
-    st.text_area("Ответ:", value=task["answer"], key=f"answer_{idx}", height=80)
-    st.text_input("Тема:", value=task["topic"], key=f"topic_{idx}")
-    st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
-    
-    st.selectbox("Bloom:", options=list(bloom_colors.keys()), index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
-    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[task['bloom']]}'>{task['bloom']}</span>", unsafe_allow_html=True)
+    # Задача
+    text_val = st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
+    st.session_state.df.loc[idx, "text"] = text_val  # сразу обновляем df
+
+    # Ответ
+    answer_val = st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
+    st.session_state.df.loc[idx, "answer"] = answer_val
+
+    # Тема
+    topic_val = st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
+    st.session_state.df.loc[idx, "topic"] = topic_val
+
+    # Междисциплинарная
+    inter_val = st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
+    st.session_state.df.loc[idx, "interdisciplinary"] = inter_val
+
+    # Bloom
+    bloom_val = st.selectbox("Bloom:", options=list(bloom_colors.keys()),
+                             index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]), key=f"bloom_{idx}")
+    st.session_state.df.loc[idx, "bloom"] = bloom_val
+
+    st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>",
+                unsafe_allow_html=True)
 
 def prev_task():
     save_current_task()
