@@ -1,24 +1,6 @@
-
 import streamlit as st
 import pandas as pd
 import os
-
-# ---------------------------
-# Цветные кнопки
-# ---------------------------
-st.markdown("""
-<style>
-div.stButton > button:first-child {
-    height: 3em;
-    border-radius: 8px;
-    color: white;
-}
-div.stButton > button:nth-child(1) {background-color: gray;}
-div.stButton > button:nth-child(2) {background-color: blue;}
-div.stButton > button:nth-child(3) {background-color: green;}
-div.stButton > button:nth-child(4) {background-color: red;}
-</style>
-""", unsafe_allow_html=True)
 
 # ---------------------------
 # Путь к CSV
