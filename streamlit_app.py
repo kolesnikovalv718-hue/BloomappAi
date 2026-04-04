@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import os
@@ -59,7 +58,9 @@ def save_csv():
     st.success(f"Сохранено! Файл: {file_path}")
 
 def render_task(idx):
-    # Отображаем элементы для редактирования
+    # --------------------
+    # Редактирование
+    # --------------------
     st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
     st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
     st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
@@ -68,6 +69,15 @@ def render_task(idx):
                              index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
                              key=f"bloom_{idx}")
     st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
+
+    # --------------------
+    # Предпросмотр с LaTeX
+    # --------------------
+    st.markdown("---")
+    st.subheader("Предпросмотр задачи")
+    st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
+    st.markdown("**Ответ:**")
+    st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
 def prev_task():
     save_current_task()
@@ -96,7 +106,7 @@ def delete_task():
 # ---------------------------
 # Интерфейс
 # ---------------------------
-st.title("Редактор задач с Bloom")
+st.title("Редактор задач с Bloom + LaTeX")
 st.info(f"Всего задач: {len(st.session_state.df)}")
 
 cols = st.columns(6)
@@ -125,7 +135,7 @@ with cols[5]:
 
 st.markdown("---")
 
-# Редактор текущей задачи
+# Редактор текущей задачи с предпросмотром LaTeX
 if len(st.session_state.df) > 0:
     render_task(st.session_state.current_index)
 else:
