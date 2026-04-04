@@ -168,6 +168,17 @@ else:
 
 st.markdown("---")
 
+st.markdown("---")
+st.header("📊 Статистика по уровням Bloom")
+
+# считаем количество задач по каждому уровню
+counts = st.session_state.df['bloom'].value_counts()
+
+for bloom, color in bloom_colors.items():
+    count = counts.get(bloom, 0)
+    st.markdown(f"<span style='color:{color}; font-weight:bold'>{bloom}: {count}</span>", unsafe_allow_html=True)
+    
+
 # Список задач с фильтрами
 st.header("Список задач")
 filter_topic = st.text_input("Фильтр по теме:")
