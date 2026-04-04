@@ -1,6 +1,123 @@
+# app.py — редактор задач Streamlit
 import streamlit as st
+import pandas as pd
+import os
 
-st.title("🎈 My newррооо app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
+# ---------------------------
+# Путь к CSV
+# ---------------------------
+file_path = "blooms_dataset.csv"  # Для Streamlit лучше локально рядом с app.py
+
+# ---------------------------
+# Загрузка или создание
+# ---------------------------
+if os.path.exists(file_path):
+    df = pd.read_csv(file_path, encoding='utf-8')
+    st.success(f"Файл найден. Загружено {len(df)} задач.")
+else:
+    df = pd.DataFrame({
+        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+        "answer": [""],
+        "level": ["Знание"],
+        "bloom": ["Remembering"],
+        "topic": ["Probability"],
+        "interdisciplinary": [""]
+    })
+    df.to_csv(file_path, index=False, encoding='utf-8')
+
+df = df.fillna("")
+
+current_index = 0
+
+# ---------------------------
+# Цвета Bloom
+# ---------------------------
+bloom_colors = {
+    "Remembering": "gray",
+    "Understanding": "blue",
+    "Applying": "green",
+    "Analyzing": "orange",
+    "Evaluating": "red",
+    "Creating": "purple"
+}
+
+# ---------------------------
+# Функции
+# ---------------------------
+def save_csv():
+    df.to_csv(file_path, index=False, encoding="utf-8")
+    st.success("Сохранено!")
+
+def render_task(idx):
+    task = df.loc[idx]
+    st.markdown(f"### Задача {idx+1}")
+    task["text"] = st.text_area("Задача:", value=task["text"], key=f"text_{idx}")
+    task["answer"] = st.text_area("Ответ:", value=task["answer"], key=f"answer_{idx}")
+    task["topic"] = st.text_input("Тема:", value=task["topic"], key=f"topic_{idx}")
+    task["interdisciplinary"] = st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
+    task["bloom"] = st.selectbox("Bloom:", options=list(bloom_colors.keys()), index=list(bloom_colors.keys()).index(task["bloom"]), key=f"bloom_{idx}")
+    df.loc[idx] = task
+
+# ---------------------------
+# Навигация
+# ---------------------------
+st.sidebar.title("Навигация")
+if "current_index" not in st.session_state:
+    st.session_state.current_index = 0
+
+if st.sidebar.button("Предыдущая"):
+    if st.session_state.current_index > 0:
+        st.session_state.current_index -= 1
+
+if st.sidebar.button("Следующая"):
+    if st.session_state.current_index < len(df) - 1:
+        st.session_state.current_index += 1
+
+if st.sidebar.button("Добавить задачу"):
+    df.loc[len(df)] = {
+        "text": "",
+        "answer": "",
+        "level": "",
+        "bloom": "Remembering",
+        "topic": "",
+        "interdisciplinary": ""
+    }
+    st.session_state.current_index = len(df) - 1
+
+# ---------------------------
+# Фильтры
+# ---------------------------
+st.sidebar.markdown("## Фильтры")
+filter_topic = st.sidebar.text_input("Фильтр по теме:")
+filter_bloom = st.sidebar.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
+
+# ---------------------------
+# Применение фильтров
+# ---------------------------
+filtered_df = df.copy()
+if filter_topic:
+    filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
+if filter_bloom != "Все":
+    filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
+
+# ---------------------------
+# Отображение задачи
+# ---------------------------
+render_task(st.session_state.current_index)
+
+# ---------------------------
+# Список задач
+# ---------------------------
+st.markdown("## Список задач (с фильтром)")
+for i, row in filtered_df.iterrows():
+    color = bloom_colors.get(row["bloom"], "black")
+    st.markdown(f"**№ {i+1}**: {row['text']}")
+    st.markdown(f"Bloom: <span style='color:{color}'>{row['bloom']}</span>", unsafe_allow_html=True)
+    st.markdown(f"Тема: {row['topic']}")
+    st.markdown("---")
+
+# ---------------------------
+# Сохранение
+# ---------------------------
+if st.button("Сохранить изменения"):
+    save_csv()
