@@ -2,7 +2,58 @@
 import streamlit as st
 import pandas as pd
 import os
+import streamlit as st
 
+# ---------------------------
+# CSS для кнопок
+# ---------------------------
+st.markdown("""
+<style>
+div.stButton > button:first-child {
+    height: 40px;
+    width: 150px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+
+/* Зеленая кнопка — Сохранить */
+div.stButton > button:nth-of-type(1) {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Синяя кнопка — Добавить задачу */
+div.stButton > button:nth-of-type(2) {
+    background-color: #2196F3;
+    color: white;
+}
+
+/* Оранжевые кнопки — Следующая / Предыдущая */
+div.stButton > button:nth-of-type(3),
+div.stButton > button:nth-of-type(4) {
+    background-color: #FF9800;
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------
+# Кнопки
+# ---------------------------
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    if st.button("Предыдущая"):
+        st.write("Предыдущая задача")
+with col2:
+    if st.button("Следующая"):
+        st.write("Следующая задача")
+with col3:
+    if st.button("Добавить задачу"):
+        st.write("Добавлена задача")
+with col4:
+    if st.button("Сохранить"):
+        st.success("Сохранено!")
 # ---------------------------
 # Путь к CSV
 # ---------------------------
