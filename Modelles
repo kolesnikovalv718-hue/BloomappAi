@@ -24,4 +24,13 @@ if st.button("Обучить модель"):
         st.write(f"Обучение: {len(X_train)}")
         st.write(f"Тест: {len(X_test)}")
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
+vectorizer = TfidfVectorizer()
+X_train_vec = vectorizer.fit_transform(X_train)
+
+model = LogisticRegression()
+model.fit(X_train_vec, y_train)
+
+st.success("Модель обучена!")
