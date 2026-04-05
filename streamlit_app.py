@@ -26,7 +26,7 @@ elif page == "Статистика модели":
     import task3
     task3.run()
 
-elif page == "Обучение и анализ модели":
+elif page == "Сохранение модели":
     import task4
     task4.run()
     
