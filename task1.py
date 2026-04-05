@@ -3,7 +3,6 @@ import pandas as pd
 import os
 
 def run():
-
     # ---------------------------
     # Путь к CSV
     # ---------------------------
@@ -43,17 +42,6 @@ def run():
     }
 
     # ---------------------------
-    # Кнопки сверху: Скачать CSV / Refresh
-    # ---------------------------
-    top_cols = st.columns([1,1])
-    
-    with top_cols[1]:
-        if st.button("Обновить"):
-            st.experimental_rerun()
-
-    st.markdown("---")
-
-    # ---------------------------
     # Функции для работы с задачей
     # ---------------------------
     def save_current_task():
@@ -70,7 +58,6 @@ def run():
         st.success(f"Сохранено! Файл: {file_path}")
 
     def render_task(idx):
-        st.subheader(f"Редактор задачи №{idx+1}")
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
@@ -80,14 +67,14 @@ def run():
                                  key=f"bloom_{idx}")
         st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
-        # Предпросмотр LaTeX
+        # LaTeX preview
         st.markdown("---")
         st.subheader("Предпросмотр задачи")
         st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
         st.markdown("**Ответ:**")
         st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
-        # Редактор Python-кода
+        # Python code editor
         st.markdown("---")
         st.subheader("🖥 Редактор Python-кода")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
@@ -123,19 +110,17 @@ def run():
                     st.info(f"💡 Решение:\n{solution}")
 
     # ---------------------------
-    # Навигация
+    # Навигация без st.experimental_rerun
     # ---------------------------
     def next_task():
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
             st.session_state.current_index += 1
-            st.experimental_rerun()
 
     def prev_task():
         save_current_task()
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
-            st.experimental_rerun()
 
     def add_task():
         save_current_task()
@@ -152,9 +137,8 @@ def run():
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Интерфейс кнопок
+    # Кнопки навигации
     # ---------------------------
-    st.markdown("---")
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
@@ -193,12 +177,12 @@ def run():
         st.warning("Нет задач")
 
     # ---------------------------
-    # Фильтры и список задач
+    # Фильтры и список задач снизу
     # ---------------------------
     st.markdown("---")
     st.header("Список задач")
-    filter_topic = st.text_input("Фильтр по теме:")
-    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
+    filter_topic = st.text_input("Фильтр по теме (снизу):")
+    filter_bloom = st.selectbox("Фильтр Bloom (снизу):", options=["Все"] + list(bloom_colors.keys()))
 
     filtered_df = st.session_state.df.copy()
     if filter_topic:
@@ -211,10 +195,13 @@ def run():
     else:
         for i, row in filtered_df.iterrows():
             color = bloom_colors.get(row["bloom"], "black")
-            st.markdown(f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}", unsafe_allow_html=True)
+            st.markdown(
+                f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}",
+                unsafe_allow_html=True
+            )
 
     # ---------------------------
-    # Статистика
+    # Статистика Bloom
     # ---------------------------
     st.markdown("---")
     st.header("📊 Статистика по уровням Bloom")
