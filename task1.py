@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import os
@@ -47,43 +46,42 @@ def run():
     # ---------------------------
     def save_current_task():
         idx = st.session_state.current_index
-        if idx < 0 or idx >= len(st.session_state.df):
-            return
         st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", "")
         st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", "")
         st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", "")
         st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", "")
         st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", "Remembering")
 
-    def save_csv():
+    def save_csv_to_file():
         save_current_task()
-        st.session_state.df.to_csv(file_path, index=False, encoding='utf-8')
-        st.success(f"Сохранено! Файл: {file_path}")
+        st.session_state.df.to_csv(file_path, index=False, encoding="utf-8")
+        st.success(f"Файл успешно сохранён на сервере: {file_path}")
 
     def render_task(idx):
-        if idx < 0 or idx >= len(st.session_state.df):
-            st.warning("Нет задач для отображения")
-            return
-
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
         st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
         bloom_val = st.selectbox(
-            "Bloom:", options=list(bloom_colors.keys()),
+            "Bloom:",
+            options=list(bloom_colors.keys()),
             index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
             key=f"bloom_{idx}"
         )
         st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
-        # LaTeX preview
+        # --------------------
+        # Предпросмотр LaTeX
+        # --------------------
         st.markdown("---")
         st.subheader("Предпросмотр задачи")
         st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
         st.markdown("**Ответ:**")
         st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
-        # Python code editor
+        # --------------------
+        # Python-код
+        # --------------------
         st.markdown("---")
         st.subheader("🖥 Редактор Python-кода")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
@@ -125,11 +123,13 @@ def run():
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
             st.session_state.current_index += 1
+            st.experimental_rerun()
 
     def prev_task():
         save_current_task()
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
+            st.experimental_rerun()
 
     def add_task():
         save_current_task()
@@ -138,21 +138,20 @@ def run():
         st.session_state.current_index = len(st.session_state.df) - 1
 
     def delete_task():
-        idx = st.session_state.current_index
-        if len(st.session_state.df) == 0:
-            return
         save_current_task()
-        st.session_state.df.drop(idx, inplace=True)
-        st.session_state.df.reset_index(drop=True, inplace=True)
-        st.session_state.current_index = min(idx, len(st.session_state.df) - 1)
+        idx = st.session_state.current_index
+        if len(st.session_state.df) > 0:
+            st.session_state.df.drop(idx, inplace=True)
+            st.session_state.df.reset_index(drop=True, inplace=True)
+            st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Кнопки навигации
+    # Интерфейс кнопок сверху
     # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
-    cols = st.columns(6)
+    cols = st.columns(7)
     with cols[0]:
         if st.button("Предыдущая"):
             prev_task()
@@ -163,18 +162,21 @@ def run():
         if st.button("Добавить"):
             add_task()
     with cols[3]:
-        if st.button("Сохранить"):
-            save_csv()
+        if st.button("Удалить"):
+            delete_task()
     with cols[4]:
+        if st.button("Сохранить CSV на сервере"):
+            save_csv_to_file()
+    with cols[5]:
         st.download_button(
             label="Скачать CSV",
             data=st.session_state.df.to_csv(index=False).encode("utf-8"),
             file_name="blooms_dataset.csv",
-            mime="text/csv"
+            mime="text/csv",
+            key="download_csv"
         )
-    with cols[5]:
-        if st.button("Удалить"):
-            delete_task()
+    with cols[6]:
+        st.button("Обновить страницу", on_click=lambda: st.experimental_rerun())
 
     st.markdown("---")
 
@@ -187,16 +189,16 @@ def run():
         st.warning("Нет задач")
 
     # ---------------------------
-    # Фильтры и список задач снизу
+    # Фильтры и список задач внизу
     # ---------------------------
     st.markdown("---")
     st.header("Список задач")
-    filter_topic = st.text_input("Фильтр по теме (снизу):")
-    filter_bloom = st.selectbox("Фильтр Bloom (снизу):", options=["Все"] + list(bloom_colors.keys()))
+    filter_topic = st.text_input("Фильтр по теме:")
+    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()), key="filter_bloom")
 
     filtered_df = st.session_state.df.copy()
     if filter_topic:
-        filtered_df = filtered_df[filtered_df["topic"].fillna("").str.lower().str.contains(filter_topic.lower())]
+        filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
     if filter_bloom != "Все":
         filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
 
