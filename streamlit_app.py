@@ -1,6 +1,6 @@
 import streamlit as st
 import task1
-import task2
+
 
 page = st.sidebar.selectbox("Выбор", ["Задание 1", "Задание 2"])
 
