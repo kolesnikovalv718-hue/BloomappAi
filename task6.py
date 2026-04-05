@@ -14,7 +14,7 @@ import sys
 # Hugging Face API для пояснений
 # ---------------------------
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/NousResearch/Nous-Hermes-Llama2-13b"
-HF_TOKEN = "hf_ВАШ_ТОКЕН"  # вставь свой бесплатный токен Hugging Face
+HF_TOKEN = "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" 
 
 def gpt_explain(task_text):
     """Генерирует краткое объяснение задачи для ученика без раскрытия ответа"""
