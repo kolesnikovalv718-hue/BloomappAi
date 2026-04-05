@@ -1,5 +1,5 @@
 # ---------------------------
-# Task6 для ученика с пояснением ИИ через Hugging Face API
+# Task6 для ученика с пояснением ИИ и проверкой ответа
 # ---------------------------
 
 import streamlit as st
@@ -12,13 +12,10 @@ import re
 # Hugging Face API (без GPT4All)
 # ---------------------------
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/NousResearch/Nous-Hermes-Llama2-13b"
-HF_TOKEN = "hf_ВАШ_ТОКЕН"  # токен можно бесплатно получить на Hugging Face
+HF_TOKEN = "hf_ВАШ_ТОКЕН"  # вставь свой бесплатный токен Hugging Face
 
 def gpt_explain(task_text):
-    """
-    Генерирует краткое объяснение задачи для ученика
-    без раскрытия правильного ответа через Hugging Face API
-    """
+    """Генерирует краткое объяснение задачи для ученика без раскрытия правильного ответа"""
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {
         "inputs": f"Объясни кратко и понятно задачу ученику, без ответа:\n{task_text}",
@@ -27,7 +24,6 @@ def gpt_explain(task_text):
     try:
         response = requests.post(HF_MODEL_URL, headers=headers, json=payload, timeout=60)
         data = response.json()
-        # Иногда API возвращает список с ключом generated_text
         return data[0]["generated_text"] if isinstance(data, list) and "generated_text" in data[0] else "💡 Пояснение не удалось получить"
     except Exception as e:
         return f"Ошибка при вызове ИИ: {e}"
@@ -43,10 +39,9 @@ def run():
     if os.path.exists(file_path):
         df = pd.read_csv(file_path, encoding='utf-8')
     else:
-        # Пример задачи с LaTeX
         df = pd.DataFrame({
             "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
-            "answer": [""],  # сюда может быть ожидаемый результат выполнения
+            "answer": ["1/6"],  # правильный ответ
             "level": ["Знание"],
             "bloom": ["Remembering"],
             "topic": ["Probability"],
@@ -55,14 +50,16 @@ def run():
     df = df.fillna("")
 
     # ---------------------------
-    # Streamlit state для сохранения между перезагрузками
+    # Streamlit state
     # ---------------------------
     if "df" not in st.session_state:
         st.session_state.df = df.copy()
     if "selected_task" not in st.session_state:
         st.session_state.selected_task = None
-    if "show_explanation" not in st.session_state:
-        st.session_state.show_explanation = False
+    if "checked" not in st.session_state:
+        st.session_state.checked = False
+    if "show_answer" not in st.session_state:
+        st.session_state.show_answer = False
     if "student_result" not in st.session_state:
         st.session_state.student_result = None
 
@@ -98,8 +95,9 @@ def run():
     for i, (_, row) in enumerate(filtered_df.iterrows()):
         if st.button(f"Задача {_+1}"):
             st.session_state.selected_task = _
-            st.session_state.show_explanation = False  # сброс пояснения при смене задачи
-            st.session_state.student_result = None     # сброс результата выполнения
+            st.session_state.checked = False
+            st.session_state.show_answer = False
+            st.session_state.student_result = None
 
     # ---------------------------
     # Показ выбранной задачи с LaTeX
@@ -110,7 +108,7 @@ def run():
 
         st.markdown(f"**№{idx+1} Задача:**")
 
-        # Разделяем текст задачи на обычный текст и формулы $$...$$
+        # Разделяем текст задачи на текст и формулы $$...$$
         parts = re.split(r"(\$\$.*?\$\$)", task["text"], flags=re.DOTALL)
         for part in parts:
             if part.startswith("$$") and part.endswith("$$"):
@@ -122,33 +120,49 @@ def run():
         st.markdown(f"**Тема:** {task['topic']}")
 
         # ---------------------------
-        # Поле для кода ученика
+        # Поле для ответа ученика
         # ---------------------------
-        student_code = st.text_area("Введите код для решения задачи:")
+        student_answer = st.text_area("Ваш ответ:")
 
         # ---------------------------
-        # Кнопка выполнения кода ученика
+        # Кнопка проверки ответа
         # ---------------------------
+        if st.button("Проверить ответ"):
+            if str(student_answer).strip() == str(task["answer"]).strip():
+                st.success("✅ Верно!")
+            else:
+                st.error("❌ Неверно!")
+            st.session_state.checked = True
+
+        # ---------------------------
+        # Кнопка показать правильный ответ
+        # ---------------------------
+        if st.button("Показать правильный ответ"):
+            st.info(f"Правильный ответ: {task['answer']}")
+            st.session_state.show_answer = True
+
+        # ---------------------------
+        # Поле для кода ученика (если задача кодовая)
+        # ---------------------------
+        student_code = st.text_area("Введите код для решения задачи (если нужно):", height=150)
+
         if st.button("Выполнить код"):
             try:
                 local_vars = {}
-                exec(student_code, {}, local_vars)  # выполнение кода ученика в отдельном словаре
-                # Результат выполнения должен быть в переменной result
+                exec(student_code, {}, local_vars)
                 st.session_state.student_result = local_vars.get("result", None)
                 st.success(f"Код выполнен, результат: {st.session_state.student_result}")
-                st.session_state.show_explanation = True  # показать пояснение после выполнения
             except Exception as e:
                 st.error(f"Ошибка выполнения кода: {e}")
 
         # ---------------------------
-        # Пояснение от ИИ (только после выполнения кода)
+        # Пояснение от ИИ (только после проверки или показа ответа)
         # ---------------------------
-        if st.session_state.show_explanation:
+        if st.session_state.checked or st.session_state.show_answer:
             st.markdown("---")
             st.markdown("💡 Пояснение от ИИ:")
             explanation = gpt_explain(task["text"])
             st.info(explanation)
-
 
 # ---------------------------
 # Запуск приложения
