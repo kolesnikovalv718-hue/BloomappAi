@@ -1,5 +1,6 @@
 text,level,bloom,topic,interdisciplinary,answer
 "Задача 1: Напишите программу, которая создаёт переменную x со значением 3.14 и выводит её тип с помощью функции type()",Применение,Applying,Python basics,,type(3.14)
+Назвать результат выражения 5 + 2 * 3,Знание,Remembering,Python basics,,5 + 2 * 3
 Указать оператор проверки равенства в Python,Знание,Remembering,Python basics,,5 == 5
 Перечислить основные типы данных Python,Знание,Remembering,Python basics,,"int, float, str, list, dict, bool"
 Определить значение len('Python'),Знание,Remembering,Python basics,,len('Python')
