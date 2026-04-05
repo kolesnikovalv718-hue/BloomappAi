@@ -4,28 +4,18 @@ import pandas as pd
 import os
 
 # ---------------------------
-# Путь к CSV
+# Путь к CSV (глобально)
 # ---------------------------
 file_path = "blooms_dataset.csv"
 
 # ---------------------------
-# Функция безопасной загрузки CSV
+# Глобальная загрузка df
 # ---------------------------
-def get_df():
-    if os.path.exists(file_path):
-        try:
-            df = pd.read_csv(file_path, encoding='utf-8', keep_default_na=False)
-        except Exception as e:
-            st.error(f"Ошибка при чтении CSV: {e}")
-            df = pd.DataFrame({
-                "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
-                "answer": [""],
-                "level": ["Знание"],
-                "bloom": ["Remembering"],
-                "topic": ["Probability"],
-                "interdisciplinary": [""]
-            })
-    else:
+if os.path.exists(file_path):
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8', keep_default_na=False)
+    except Exception as e:
+        st.error(f"Ошибка при чтении CSV: {e}")
         df = pd.DataFrame({
             "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
             "answer": [""],
@@ -34,18 +24,27 @@ def get_df():
             "topic": ["Probability"],
             "interdisciplinary": [""]
         })
-    df = df.fillna("")
-    return df
+else:
+    df = pd.DataFrame({
+        "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+        "answer": [""],
+        "level": ["Знание"],
+        "bloom": ["Remembering"],
+        "topic": ["Probability"],
+        "interdisciplinary": [""]
+    })
+df = df.fillna("")
 
 # ---------------------------
 # Основная обёртка страницы
 # ---------------------------
 def run():
+    global df  # добавили глобальный df
     # ---------------------------
     # Инициализация session_state
     # ---------------------------
     if "df" not in st.session_state:
-        st.session_state.df = get_df()
+        st.session_state.df = df.copy()  # читаем из глобального df
     if "current_index" not in st.session_state:
         st.session_state.current_index = 0
 
@@ -73,9 +72,17 @@ def run():
 
     def save_csv():
         save_current_task()
-        st.session_state.df.to_csv(file_path, index=False, encoding='utf-8')
+        global df
+        df = st.session_state.df.copy()  # сохраняем изменения в глобальный df
+        df.to_csv(file_path, index=False, encoding='utf-8')
         st.success(f"Сохранено! Файл: {file_path}")
 
+    # ---------------------------
+    # Дальше весь твой render_task, навигация, кнопки, фильтры
+    # ---------------------------
+    # ... здесь остаётся весь твой код без изменений ...
+
+    
     def render_task(idx):
         if idx >= len(st.session_state.df):
             st.warning("Задача не найдена")
