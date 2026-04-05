@@ -3,74 +3,99 @@ import streamlit as st
 st.set_page_config(page_title="Меню", layout="wide")
 
 page = st.sidebar.selectbox(
-    "Выбор:",
+    "Выбор",
     ["Главная", "Редактор задач", "Обучение модели",
      "Статистика модели", "Сохранение модели",
      "ученик","экспорт проба","runtask"]
 )
 
 if page == "Главная":
-    st.markdown(
-        """
-        <style>
-        body {
-            background: #0f2027;  /* тёмный фон */
-            background: linear-gradient(to right, #2c5364, #203a43, #0f2027);
-            color: white;
-        }
-        .hero {
-            text-align: center;
-            padding: 80px 20px;
-            font-family: 'Arial', sans-serif;
-        }
-        .hero h1 {
-            font-size: 60px;
-            background: linear-gradient(90deg, #ff6a00, #ee0979, #00f260);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-        @keyframes glow {
-            0% { text-shadow: 0 0 10px #ff6a00, 0 0 20px #ee0979; }
-            50% { text-shadow: 0 0 20px #00f260, 0 0 40px #ee0979; }
-            100% { text-shadow: 0 0 30px #ff6a00, 0 0 60px #00f260; }
-        }
-        .cards {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 50px;
-        }
-        .card {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
-            width: 200px;
-            text-align: center;
-            transition: transform 0.3s, background 0.3s;
-        }
-        .card:hover {
-            transform: translateY(-10px);
-            background: rgba(255,255,255,0.2);
-        }
-        .card h2 { font-size: 22px; }
-        </style>
+    st.markdown("""
+    <style>
+    body {
+        background: #1e1e1e;
+        font-family: 'Arial', sans-serif;
+        color: white;
+    }
+    .hero {
+        text-align: center;
+        padding: 50px 20px;
+    }
+    .hero h1 {
+        font-size: 50px;
+        background: linear-gradient(90deg, #ff6a00, #ee0979, #00f260);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    }
+    .hero p {
+        font-size: 20px;
+        color: #ccc;
+        margin-top: 10px;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 30px;
+        margin: 50px 20px;
+    }
+    .card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1));
+        border: 2px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 40px 20px;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-10px) rotate(-2deg);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    .card h2 {
+        font-size: 22px;
+        margin-bottom: 10px;
+        color: #fff;
+    }
+    .card p {
+        color: #aaa;
+        font-size: 16px;
+    }
+    </style>
 
-        <div class="hero">
-            <h1>🚀 AI Панель управления</h1>
-            <p>Выбери задание или следи за статусом модели</p>
+    <div class="hero">
+        <h1>🎓 AI-педагогика и тестирование</h1>
+        <p>Блум, MML обучение и тестирование в одной панели</p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Знание</h2>
+            <p>Тестирование базовых знаний и фактов</p>
         </div>
-
-        <div class="cards">
-            <div class="card"><h2>Редактор задач</h2></div>
-            <div class="card"><h2>Обучение модели</h2></div>
-            <div class="card"><h2>Статистика</h2></div>
+        <div class="card">
+            <h2>Понимание</h2>
+            <p>Проверка понимания концепций</p>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div class="card">
+            <h2>Применение</h2>
+            <p>Практические задания и кейсы</p>
+        </div>
+        <div class="card">
+            <h2>Анализ</h2>
+            <p>Разбор данных и выводы</p>
+        </div>
+        <div class="card">
+            <h2>Синтез</h2>
+            <p>Создание новых решений</p>
+        </div>
+        <div class="card">
+            <h2>Оценка</h2>
+            <p>Критическая оценка и самоанализ</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Остальные страницы — без изменений
+# Остальные страницы остаются без изменений
 elif page == "Редактор задач":
     import task1; task1.run()
 elif page == "Обучение модели":
