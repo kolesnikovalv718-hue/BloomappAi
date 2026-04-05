@@ -3,14 +3,58 @@ import pandas as pd
 import os
 
 def run():
-    # ---------------------------
-    # Путь к CSV
-    # ---------------------------
+    st.markdown("""
+<style>
+/* Общий стиль кнопок */
+.stButton > button {
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: bold;
+    color: white;
+    border: none;
+}
+
+/* Предыдущая */
+.stButton:nth-of-type(1) > button {
+    background-color: #6c757d;
+}
+
+/* Следующая */
+.stButton:nth-of-type(2) > button {
+    background-color: #0d6efd;
+}
+
+/* Добавить */
+.stButton:nth-of-type(3) > button {
+    background-color: #198754;
+}
+
+/* Сохранить */
+.stButton:nth-of-type(4) > button {
+    background-color: #fd7e14;
+}
+
+/* Удалить */
+.stButton:nth-of-type(6) > button {
+    background-color: #dc3545;
+}
+
+/* Прогонщик */
+.stButton:nth-of-type(7) > button {
+    background-color: #6f42c1;
+}
+
+/* Hover эффект */
+.stButton > button:hover {
+    opacity: 0.85;
+    transform: scale(1.03);
+}
+</style>
+""", unsafe_allow_html=True)
+    # --- Путь к CSV
     file_path = "blooms_dataset.csv"
 
-    # ---------------------------
-    # Загрузка или создание CSV
-    # ---------------------------
+    # --Загрузка или создание CSV
     if os.path.exists(file_path):
         df = pd.read_csv(file_path, encoding='utf-8')
     else:
