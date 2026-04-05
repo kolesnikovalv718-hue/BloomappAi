@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import os
@@ -63,25 +62,20 @@ def run():
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
-        st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
+        st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
         bloom_val = st.selectbox("Bloom:", options=list(bloom_colors.keys()),
                                  index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
                                  key=f"bloom_{idx}")
         st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
-        # --------------------
         # Предпросмотр LaTeX
-        # --------------------
         st.markdown("---")
         st.subheader("Предпросмотр задачи")
         st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
         st.markdown("**Ответ:**")
         st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
-        # --------------------
-        #  Python-код
-        # ---------
-        -----------
+        # Редактор Python-кода
         st.markdown("---")
         st.subheader("🖥 Редактор Python-кода")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
@@ -120,12 +114,16 @@ def run():
     # Навигация
     # ---------------------------
     def next_task():
+        if "current_index" not in st.session_state:
+            st.session_state.current_index = 0
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
             st.session_state.current_index += 1
             st.experimental_rerun()
 
     def prev_task():
+        if "current_index" not in st.session_state:
+            st.session_state.current_index = 0
         save_current_task()
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
