@@ -1,5 +1,6 @@
+
 # ---------------------------
-# Task6 для ученика с пояснением ИИ и проверкой ответа
+# Task6 для ученика с кодом, проверкой и ИИ-пояснением
 # ---------------------------
 
 import streamlit as st
@@ -9,13 +10,13 @@ import requests
 import re
 
 # ---------------------------
-# Hugging Face API (без GPT4All)
+# Hugging Face API для пояснений
 # ---------------------------
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/NousResearch/Nous-Hermes-Llama2-13b"
 HF_TOKEN = "hf_ВАШ_ТОКЕН"  # вставь свой бесплатный токен Hugging Face
 
 def gpt_explain(task_text):
-    """Генерирует краткое объяснение задачи для ученика без раскрытия правильного ответа"""
+    """Генерирует краткое объяснение задачи для ученика без раскрытия ответа"""
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {
         "inputs": f"Объясни кратко и понятно задачу ученику, без ответа:\n{task_text}",
@@ -41,7 +42,7 @@ def run():
     else:
         df = pd.DataFrame({
             "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
-            "answer": ["1/6"],  # правильный ответ
+            "answer": ["1/6"],  # правильный ответ для проверки
             "level": ["Знание"],
             "bloom": ["Remembering"],
             "topic": ["Probability"],
@@ -100,7 +101,7 @@ def run():
             st.session_state.student_result = None
 
     # ---------------------------
-    # Показ выбранной задачи с LaTeX
+    # Показ выбранной задачи
     # ---------------------------
     if st.session_state.selected_task is not None:
         idx = st.session_state.selected_task
@@ -108,7 +109,7 @@ def run():
 
         st.markdown(f"**№{idx+1} Задача:**")
 
-        # Разделяем текст задачи на текст и формулы $$...$$
+        # Разделяем текст задачи на обычный текст и LaTeX
         parts = re.split(r"(\$\$.*?\$\$)", task["text"], flags=re.DOTALL)
         for part in parts:
             if part.startswith("$$") and part.endswith("$$"):
@@ -120,13 +121,11 @@ def run():
         st.markdown(f"**Тема:** {task['topic']}")
 
         # ---------------------------
-        # Поле для ответа ученика
+        # Поле для текстового ответа
         # ---------------------------
         student_answer = st.text_area("Ваш ответ:")
 
-        # ---------------------------
-        # Кнопка проверки ответа
-        # ---------------------------
+        # Кнопка проверки текстового ответа
         if st.button("Проверить ответ"):
             if str(student_answer).strip() == str(task["answer"]).strip():
                 st.success("✅ Верно!")
@@ -134,35 +133,50 @@ def run():
                 st.error("❌ Неверно!")
             st.session_state.checked = True
 
-        # ---------------------------
         # Кнопка показать правильный ответ
-        # ---------------------------
         if st.button("Показать правильный ответ"):
             st.info(f"Правильный ответ: {task['answer']}")
             st.session_state.show_answer = True
 
         # ---------------------------
-        # Поле для кода ученика (если задача кодовая)
+        # Поле для кода ученика
         # ---------------------------
         student_code = st.text_area("Введите код для решения задачи (если нужно):", height=150)
 
+        # Кнопка выполнения кода с автоматическим захватом результата
         if st.button("Выполнить код"):
             try:
+                code_lines = student_code.strip().split("\n")
                 local_vars = {}
-                exec(student_code, {}, local_vars)
-                st.session_state.student_result = local_vars.get("result", None)
+
+                if len(code_lines) > 1:
+                    # выполняем все строки кроме последней
+                    exec("\n".join(code_lines[:-1]), {}, local_vars)
+
+                last_line = code_lines[-1]
+                # если последняя строка присваивание result, берем переменную
+                if "=" in last_line:
+                    exec(last_line, {}, local_vars)
+                    var_name = last_line.split("=")[0].strip()
+                    st.session_state.student_result = local_vars.get(var_name, None)
+                else:
+                    # последняя строка как выражение
+                    st.session_state.student_result = eval(last_line, {}, local_vars)
+
                 st.success(f"Код выполнен, результат: {st.session_state.student_result}")
+                st.session_state.checked = True
             except Exception as e:
                 st.error(f"Ошибка выполнения кода: {e}")
 
         # ---------------------------
-        # Пояснение от ИИ (только после проверки или показа ответа)
+        # Пояснение от ИИ (появляется после проверки или показа ответа)
         # ---------------------------
         if st.session_state.checked or st.session_state.show_answer:
             st.markdown("---")
             st.markdown("💡 Пояснение от ИИ:")
             explanation = gpt_explain(task["text"])
             st.info(explanation)
+
 
 # ---------------------------
 # Запуск приложения
