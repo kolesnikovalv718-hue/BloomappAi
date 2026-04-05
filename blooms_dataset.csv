@@ -1,4 +1,4 @@
-"text,level,bloom,topic,interdisciplinary,answer
+text,level,bloom,topic,interdisciplinary,answer
 "Задача 1: Напишите программу, которая создаёт переменную x со значением 3.14 и выводит её тип с помощью функции type()",Применение,Applying,Python basics,,type(3.14)
 "адача 51: Приливы моря. Напишите программу на Python, которая моделирует высоту приливов воды по формуле y(t) = 1.3 + 1.2 * cos(2*t).",Применение,Applying,Python basics,,"import numpy as np\\nimport matplotlib.pyplot as plt\\nimport streamlit as st\\n\\nt=3\\ny=1.3+1.2*np.cos(2*t)\\nst.write('Высота воды через 3 часа:', y)\\nst.write('Ограждение достаточно' if y<=2.8 else 'Ограждение недостаточно')\\ntimes=np.arange(0,6,0.1)\\ny_vals=1.3+1.2*np.cos(2*times)\\nfig,ax=plt.subplots()\\nax.plot(times,y_vals)\\nax.set_xlabel('t')\\nax.set_ylabel('y')\\nst.pyplot(fig)
 Назвать результат выражения 5 + 2 * 3,Знание,Remembering,Python basics,,5 + 2 * 3
