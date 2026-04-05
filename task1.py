@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import streamlit.components.v1 as components
 
 def run():
     # ---------------------------
@@ -137,36 +138,28 @@ def run():
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Кнопки навигации
+    # Навигационные кнопки в одну строку с разными цветами
     # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
-    cols = st.columns(6)
-    with cols[0]:
-        if st.button("Предыдущая"):
-            prev_task()
-    with cols[1]:
-        if st.button("Следующая"):
-            next_task()
-    with cols[2]:
-        if st.button("Добавить"):
-            add_task()
-    with cols[3]:
-        if st.button("Сохранить"):
-            save_csv()
-    with cols[4]:
-        st.download_button(
-            label="Скачать CSV",
-            data=st.session_state.df.to_csv(index=False).encode("utf-8"),
-            file_name="blooms_dataset.csv",
-            mime="text/csv"
-        )
-    with cols[5]:
-        if st.button("Удалить"):
-            delete_task()
-
-    st.markdown("---")
+    buttons_html = f"""
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <button onclick="window.parent.postMessage({{func:'prev_task'}}, '*')" style="flex:1; background:#6c757d; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Предыдущая</button>
+      <button onclick="window.parent.postMessage({{func:'next_task'}}, '*')" style="flex:1; background:#0d6efd; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Следующая</button>
+      <button onclick="window.parent.postMessage({{func:'add_task'}}, '*')" style="flex:1; background:#198754; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Добавить</button>
+      <button onclick="window.parent.postMessage({{func:'save_csv'}}, '*')" style="flex:1; background:#ffc107; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Сохранить</button>
+      <button onclick="window.parent.postMessage({{func:'download_csv'}}, '*')" style="flex:1; background:#0dcaf0; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Скачать CSV</button>
+      <button onclick="window.parent.postMessage({{func:'delete_task'}}, '*')" style="flex:1; background:#dc3545; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Удалить</button>
+    </div>
+    <style>
+    button:hover {{
+        transform: scale(1.05);
+        transition: all 0.2s ease;
+    }}
+    </style>
+    """
+    components.html(buttons_html, height=70)
 
     # ---------------------------
     # Рендер текущей задачи
