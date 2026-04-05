@@ -1,6 +1,4 @@
 import streamlit as st
-
-# сначала только Streamlit
 st.set_page_config(page_title="Меню", layout="wide")
 
 page = st.sidebar.selectbox("Выбор", ["Главная", "Редактор задач", "Обучение модели"])
