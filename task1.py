@@ -63,7 +63,7 @@ def run():
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
-        st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
+        st.text_input("Междисциплинарная:", value=task["interdisciplinary"], key=f"inter_{idx}")
         bloom_val = st.selectbox("Bloom:", options=list(bloom_colors.keys()),
                                  index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
                                  key=f"bloom_{idx}")
@@ -79,8 +79,9 @@ def run():
         st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
         # --------------------
-        # Живой Python-код
-        # --------------------
+        #  Python-код
+        # ---------
+        -----------
         st.markdown("---")
         st.subheader("🖥 Редактор Python-кода")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
