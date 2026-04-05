@@ -1,32 +1,41 @@
 # ---------------------------
-# Task6 для ученика с пояснением ИИ и поддержкой кода ученика
+# Task6 для ученика с пояснением ИИ через Hugging Face API
 # ---------------------------
 
 import streamlit as st
 import pandas as pd
 import os
-from gpt4all import GPT4All
+import requests
 import re
 
+# ---------------------------
+# Hugging Face API (без GPT4All)
+# ---------------------------
+HF_MODEL_URL = "https://api-inference.huggingface.co/models/NousResearch/Nous-Hermes-Llama2-13b"
+HF_TOKEN = "hf_ВАШ_ТОКЕН"  # токен можно бесплатно получить на Hugging Face
+
+def gpt_explain(task_text):
+    """
+    Генерирует краткое объяснение задачи для ученика
+    без раскрытия правильного ответа через Hugging Face API
+    """
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    payload = {
+        "inputs": f"Объясни кратко и понятно задачу ученику, без ответа:\n{task_text}",
+        "parameters": {"max_new_tokens": 200}
+    }
+    try:
+        response = requests.post(HF_MODEL_URL, headers=headers, json=payload, timeout=60)
+        data = response.json()
+        # Иногда API возвращает список с ключом generated_text
+        return data[0]["generated_text"] if isinstance(data, list) and "generated_text" in data[0] else "💡 Пояснение не удалось получить"
+    except Exception as e:
+        return f"Ошибка при вызове ИИ: {e}"
+
+# ---------------------------
+# Главная функция Streamlit
+# ---------------------------
 def run():
-    # ---------------------------
-    # Инициализация локальной модели ИИ (GPT4All)
-    # ---------------------------
-    model_path = "ggml-gpt4all-j-v1.3-groovy.bin"  # загрузи модель заранее
-    gpt_model = GPT4All(model_path)
-
-    # ---------------------------
-    # Функция генерации пояснения от ИИ
-    # ---------------------------
-    def gpt_explain(task_text):
-        """
-        Генерирует краткое объяснение задачи для ученика
-        без раскрытия правильного ответа
-        """
-        prompt = f"Объясни кратко и понятно задачу ученику, без раскрытия ответа:\n{task_text}\nПояснение:"
-        response = gpt_model.generate(prompt, max_tokens=200)
-        return response
-
     # ---------------------------
     # Загрузка CSV с задачами или создание примера
     # ---------------------------
@@ -123,8 +132,8 @@ def run():
         if st.button("Выполнить код"):
             try:
                 local_vars = {}
-                exec(student_code, {}, local_vars)  # выполнение кода ученика безопасно в отдельном словаре
-                # Ожидаем, что результат выполнения помещается в переменную `result`
+                exec(student_code, {}, local_vars)  # выполнение кода ученика в отдельном словаре
+                # Результат выполнения должен быть в переменной result
                 st.session_state.student_result = local_vars.get("result", None)
                 st.success(f"Код выполнен, результат: {st.session_state.student_result}")
                 st.session_state.show_explanation = True  # показать пояснение после выполнения
@@ -139,3 +148,10 @@ def run():
             st.markdown("💡 Пояснение от ИИ:")
             explanation = gpt_explain(task["text"])
             st.info(explanation)
+
+
+# ---------------------------
+# Запуск приложения
+# ---------------------------
+if __name__ == "__main__":
+    run()
