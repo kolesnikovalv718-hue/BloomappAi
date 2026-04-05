@@ -1,3 +1,7 @@
+
+
+
+
 import streamlit as st
 import pandas as pd
 import os
@@ -212,3 +216,4 @@ counts = st.session_state.df['bloom'].value_counts()
 for bloom, color in bloom_colors.items():
     count = counts.get(bloom, 0)
     st.markdown(f"<span style='color:{color}; font-weight:bold'>{bloom}: {count}</span>", unsafe_allow_html=True)
+    
