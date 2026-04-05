@@ -4,9 +4,9 @@ import os
 
 def run():
     """
-    Ученический режим для задач Bloom.
-    Только просмотр задач, ввод ответа и проверка.
-    Статистика по уровням Bloom остаётся.
+    Учебный режим: просмотр задач Bloom, ввод ответа и проверка.
+    Сохраняем кнопку "Выполнить код" для Python.
+    Статистика Bloom остаётся.
     """
 
     # ---------------------------
@@ -67,7 +67,26 @@ def run():
     st.markdown(f"**Тема:** {task['topic']}", unsafe_allow_html=True)
 
     st.text_area("Твой ответ:", key=f"user_answer_{idx}", height=80)
-    
+
+    # ---------------------------
+    # Живой Python-код
+    # ---------------------------
+    st.markdown("---")
+    st.subheader("🖥 Выполнить Python-код")
+    code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
+
+    if st.button("Выполнить код"):
+        with st.expander("Результат выполнения", expanded=True):
+            try:
+                local_vars = {}
+                exec(code_val, {}, local_vars)
+                if "result" in local_vars:
+                    st.write("Результат:", local_vars["result"])
+                else:
+                    st.write("Код выполнен")
+            except Exception as e:
+                st.error(f"Ошибка выполнения: {e}")
+
     # ---------------------------
     # Проверка ответа
     # ---------------------------
