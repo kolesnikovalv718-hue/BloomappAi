@@ -3,6 +3,7 @@ import pandas as pd
 import os
 
 def run():
+
     # ---------------------------
     # Путь к CSV
     # ---------------------------
@@ -42,6 +43,23 @@ def run():
     }
 
     # ---------------------------
+    # Кнопки сверху: Скачать CSV / Refresh
+    # ---------------------------
+    top_cols = st.columns([1,1])
+    with top_cols[0]:
+        st.download_button(
+            label="Скачать CSV",
+            data=st.session_state.df.to_csv(index=False).encode("utf-8"),
+            file_name="blooms_dataset.csv",
+            mime="text/csv"
+        )
+    with top_cols[1]:
+        if st.button("Обновить"):
+            st.experimental_rerun()
+
+    st.markdown("---")
+
+    # ---------------------------
     # Функции для работы с задачей
     # ---------------------------
     def save_current_task():
@@ -58,6 +76,7 @@ def run():
         st.success(f"Сохранено! Файл: {file_path}")
 
     def render_task(idx):
+        st.subheader(f"Редактор задачи №{idx+1}")
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
@@ -67,14 +86,14 @@ def run():
                                  key=f"bloom_{idx}")
         st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
-        # LaTeX preview
+        # Предпросмотр LaTeX
         st.markdown("---")
         st.subheader("Предпросмотр задачи")
         st.markdown(st.session_state.get(f"text_{idx}", ""), unsafe_allow_html=True)
         st.markdown("**Ответ:**")
         st.markdown(st.session_state.get(f"answer_{idx}", ""), unsafe_allow_html=True)
 
-        # Python code editor
+        # Редактор Python-кода
         st.markdown("---")
         st.subheader("🖥 Редактор Python-кода")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
@@ -110,17 +129,19 @@ def run():
                     st.info(f"💡 Решение:\n{solution}")
 
     # ---------------------------
-    # Навигация без st.experimental_rerun
+    # Навигация
     # ---------------------------
     def next_task():
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
             st.session_state.current_index += 1
+            st.experimental_rerun()
 
     def prev_task():
         save_current_task()
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
+            st.experimental_rerun()
 
     def add_task():
         save_current_task()
@@ -137,8 +158,9 @@ def run():
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Кнопки навигации
+    # Интерфейс кнопок
     # ---------------------------
+    st.markdown("---")
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
@@ -177,12 +199,12 @@ def run():
         st.warning("Нет задач")
 
     # ---------------------------
-    # Фильтры и список задач снизу
+    # Фильтры и список задач
     # ---------------------------
     st.markdown("---")
     st.header("Список задач")
-    filter_topic = st.text_input("Фильтр по теме (снизу):")
-    filter_bloom = st.selectbox("Фильтр Bloom (снизу):", options=["Все"] + list(bloom_colors.keys()))
+    filter_topic = st.text_input("Фильтр по теме:")
+    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
 
     filtered_df = st.session_state.df.copy()
     if filter_topic:
@@ -195,13 +217,10 @@ def run():
     else:
         for i, row in filtered_df.iterrows():
             color = bloom_colors.get(row["bloom"], "black")
-            st.markdown(
-                f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}", unsafe_allow_html=True)
 
     # ---------------------------
-    # Статистика Bloom
+    # Статистика
     # ---------------------------
     st.markdown("---")
     st.header("📊 Статистика по уровням Bloom")
@@ -209,4 +228,3 @@ def run():
     for bloom, color in bloom_colors.items():
         count = counts.get(bloom, 0)
         st.markdown(f"<span style='color:{color}; font-weight:bold'>{bloom}: {count}</span>", unsafe_allow_html=True)
-
