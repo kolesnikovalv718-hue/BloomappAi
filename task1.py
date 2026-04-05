@@ -42,7 +42,7 @@ def run():
     }
 
     # ---------------------------
-    # Функции для работы с задачей
+    # Функции
     # ---------------------------
     def save_current_task():
         idx = st.session_state.current_index
@@ -109,9 +109,6 @@ def run():
                 else:
                     st.info(f"💡 Решение:\n{solution}")
 
-    # ---------------------------
-    # Навигация и кнопки
-    # ---------------------------
     def next_task():
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
@@ -138,7 +135,9 @@ def run():
             st.session_state.df.reset_index(drop=True, inplace=True)
             st.session_state.current_index = max(0, idx-1)
 
-    # Интерфейс кнопок
+    # ---------------------------
+    # Интерфейс
+    # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
@@ -173,30 +172,3 @@ def run():
         render_task(st.session_state.current_index)
     else:
         st.warning("Нет задач")
-
-    # Фильтры и список задач
-    st.markdown("---")
-    st.header("Список задач")
-    filter_topic = st.text_input("Фильтр по теме:")
-    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
-
-    filtered_df = st.session_state.df.copy()
-    if filter_topic:
-        filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
-    if filter_bloom != "Все":
-        filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
-
-    if len(filtered_df) == 0:
-        st.warning("По фильтру нет задач")
-    else:
-        for i, row in filtered_df.iterrows():
-            color = bloom_colors.get(row["bloom"], "black")
-            st.markdown(f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}", unsafe_allow_html=True)
-
-    # Статистика
-    st.markdown("---")
-    st.header("📊 Статистика по уровням Bloom")
-    counts = st.session_state.df['bloom'].value_counts()
-    for bloom, color in bloom_colors.items():
-        count = counts.get(bloom, 0)
-        st.markdown(f"<span style='color:{color}; font-weight:bold'>{bloom}: {count}</span>", unsafe_allow_html=True)
