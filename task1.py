@@ -3,47 +3,50 @@ import pandas as pd
 import os
 
 def run():
-st.markdown("""
+    st.markdown("""
 <style>
 
-/* Общий стиль */
+/* ВСЕ кнопки */
 .stButton > button {
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px;
     font-weight: bold;
     color: white;
     border: none;
+    transition: 0.2s;
 }
 
-/* Цвета по KEY */
-button[data-testid="baseButton-prev"] {
-    background-color: #6c757d;
+/* ПЕРВАЯ СТРОКА */
+div[data-testid="column"]:nth-of-type(1) .stButton > button {
+    background: linear-gradient(45deg, #6c757d, #495057);
 }
 
-button[data-testid="baseButton-next"] {
-    background-color: #0d6efd;
+div[data-testid="column"]:nth-of-type(2) .stButton > button {
+    background: linear-gradient(45deg, #0d6efd, #3a86ff);
 }
 
-button[data-testid="baseButton-add"] {
-    background-color: #198754;
+div[data-testid="column"]:nth-of-type(3) .stButton > button {
+    background: linear-gradient(45deg, #198754, #2ecc71);
 }
 
-button[data-testid="baseButton-save"] {
-    background-color: #fd7e14;
+/* ВТОРАЯ СТРОКА */
+div[data-testid="column"]:nth-of-type(4) .stButton > button {
+    background: linear-gradient(45deg, #fd7e14, #ff9f43);
 }
 
-button[data-testid="baseButton-delete"] {
-    background-color: #dc3545;
+div[data-testid="column"]:nth-of-type(6) .stButton > button {
+    background: linear-gradient(45deg, #dc3545, #ff4d6d);
 }
 
-button[data-testid="baseButton-run"] {
-    background-color: #6f42c1;
+/* ПРОГОНЩИК */
+.stButton:last-child > button {
+    background: linear-gradient(45deg, #6f42c1, #9b5de5);
 }
 
-/* Hover */
+/* Hover эффект */
 .stButton > button:hover {
-    opacity: 0.85;
-    transform: scale(1.03);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
 
 </style>
@@ -189,7 +192,7 @@ button[data-testid="baseButton-run"] {
     # Первая строка
     
     with row1[0]:
-    if st.button("Предыдущая", key="prev"):
+    if st.button("Предыдущая"):
         prev_task()
 
     with row1[1]:
