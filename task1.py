@@ -3,9 +3,10 @@ import pandas as pd
 import os
 
 def run():
-    st.markdown("""
+st.markdown("""
 <style>
-/* Общий стиль кнопок */
+
+/* Общий стиль */
 .stButton > button {
     border-radius: 10px;
     padding: 10px;
@@ -14,41 +15,37 @@ def run():
     border: none;
 }
 
-/* Предыдущая */
-.stButton:nth-of-type(1) > button {
+/* По тексту */
+button:has(div:contains("Предыдущая")) {
     background-color: #6c757d;
 }
 
-/* Следующая */
-.stButton:nth-of-type(2) > button {
+button:has(div:contains("Следующая")) {
     background-color: #0d6efd;
 }
 
-/* Добавить */
-.stButton:nth-of-type(3) > button {
+button:has(div:contains("Добавить")) {
     background-color: #198754;
 }
 
-/* Сохранить */
-.stButton:nth-of-type(4) > button {
+button:has(div:contains("Сохранить")) {
     background-color: #fd7e14;
 }
 
-/* Удалить */
-.stButton:nth-of-type(6) > button {
+button:has(div:contains("Удалить")) {
     background-color: #dc3545;
 }
 
-/* Прогонщик */
-.stButton:nth-of-type(7) > button {
+button:has(div:contains("Прогонщик")) {
     background-color: #6f42c1;
 }
 
-/* Hover эффект */
+/* Hover */
 .stButton > button:hover {
     opacity: 0.85;
     transform: scale(1.03);
 }
+
 </style>
 """, unsafe_allow_html=True)
     # --- Путь к CSV
