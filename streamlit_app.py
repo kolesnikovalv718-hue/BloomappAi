@@ -11,78 +11,36 @@ page = st.sidebar.selectbox(
 
 if page == "Главная":
     st.markdown("""
+    <canvas id="bgCanvas"></canvas>
     <style>
-    body { background:#0a1f3d; color:white; font-family:'Segoe UI', sans-serif; }
+    body { margin:0; background:#0a0f1f; overflow:hidden; }
+    canvas { position:fixed; top:0; left:0; z-index:-1; width:100%; height:100%; }
 
-    /* Герой-заголовок */
-    .hero { text-align:center; padding:60px 20px; position:relative; overflow:hidden; }
+    .hero { position:relative; text-align:center; padding:60px 20px; color:white; }
     .hero h1 {
-        font-size:56px;
-        background: linear-gradient(90deg, #00d4ff, #0077ff, #00aaff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight:bold; margin-bottom:10px;
+        font-size:56px; 
+        background: linear-gradient(90deg,#00d4ff,#0077ff,#00aaff);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        margin-bottom:10px; font-weight:bold;
     }
     .hero p { font-size:20px; color:#a0c4ff; margin-bottom:50px; }
 
-    /* Синусоида на фоне */
-    .sinewave {
-        position:absolute; width:200%; height:400px; top:0; left:-50%;
-        background: repeating-linear-gradient(
-            0deg,
-            rgba(0,255,255,0.1) 0px,
-            rgba(0,255,255,0.1) 2px,
-            transparent 2px,
-            transparent 10px
-        );
-        animation: wave 8s linear infinite;
-        transform: rotate(45deg);
-        z-index:-2;
-    }
-    @keyframes wave {
-        0% { transform: translateX(0) rotate(45deg); }
-        100% { transform: translateX(-50%) rotate(45deg); }
-    }
-
-    /* Светящаяся карта (точки + линии) */
-    .network { position:absolute; width:100%; height:100%; top:0; left:0; z-index:-1; }
-    .node {
-        position:absolute;
-        width:8px; height:8px;
-        background:#00f0ff;
-        border-radius:50%;
-        box-shadow: 0 0 15px #00f0ff, 0 0 25px #00d4ff;
-        animation: flicker 3s infinite alternate;
-    }
-    @keyframes flicker { 0% { opacity:0.4; } 50% { opacity:1; } 100% { opacity:0.4; } }
-
-    /* Карточки Bloom */
     .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:30px; margin:0 20px 50px 20px; }
-    .card {
-        background: linear-gradient(135deg, rgba(0,119,255,0.2), rgba(0,180,255,0.1));
+    .card { background: linear-gradient(135deg, rgba(0,119,255,0.2), rgba(0,180,255,0.1));
         border-radius:20px; padding:40px 20px; text-align:center; transition: transform 0.3s, box-shadow 0.3s;
-        cursor:pointer; border:1px solid rgba(0,180,255,0.3); position:relative;
-    }
+        cursor:pointer; border:1px solid rgba(0,180,255,0.3); position:relative; }
     .card:hover { transform: translateY(-10px) rotate(-3deg); box-shadow:0 10px 50px rgba(0,0,0,0.7); }
     .card h2 { font-size:22px; margin-bottom:10px; color:#00f0ff; }
     .card p { font-size:16px; color:#a0d4ff; }
-
-    /* Прогресс-бары */
     .progress-bar { position:absolute; bottom:10px; left:20px; width:80%; height:8px; background: rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
     .progress-bar-inner { height:100%; width:0%; background: linear-gradient(90deg,#00d4ff,#0077ff); border-radius:4px; animation: load 3s forwards; }
     @keyframes load { 0% { width:0%; } 100% { width:70%; } }
     </style>
 
     <div class="hero">
-        <div class="sinewave"></div>
-        <div class="network">
-            <div class="node" style="top:10%; left:20%;"></div>
-            <div class="node" style="top:30%; left:70%;"></div>
-            <div class="node" style="top:60%; left:40%;"></div>
-            <div class="node" style="top:80%; left:10%;"></div>
-        </div>
         <h1>🎓 AI-педагогика & MML обучение</h1>
-        <p>Интерактивная карта знаний Bloom с прогрессом учеников</p>
+        <p>Интерактивная карта Bloom и прогресс учеников</p>
     </div>
 
     <div class="grid">
@@ -93,6 +51,71 @@ if page == "Главная":
         <div class="card"><h2>Синтез</h2><p>Создание нового</p><div class="progress-bar"><div class="progress-bar-inner" style="animation-delay:1.2s"></div></div></div>
         <div class="card"><h2>Оценка</h2><p>Критическая оценка</p><div class="progress-bar"><div class="progress-bar-inner" style="animation-delay:1.5s"></div></div></div>
     </div>
+
+    <script>
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+
+    // Генерируем точки для сети
+    const nodes = [];
+    for(let i=0;i<30;i++){
+        nodes.push({
+            x: Math.random()*W,
+            y: Math.random()*H,
+            vx: (Math.random()-0.5)*0.5,
+            vy: (Math.random()-0.5)*0.5
+        });
+    }
+
+    function draw(){
+        ctx.clearRect(0,0,W,H);
+
+        // Синусоида
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(0,200,255,0.3)';
+        ctx.lineWidth = 2;
+        for(let x=0;x<W;x++){
+            ctx.lineTo(x,H/2 + 50*Math.sin((x + Date.now()*0.002)/50));
+        }
+        ctx.stroke();
+
+        // Сеть точек и линий
+        nodes.forEach(n=>{
+            n.x+=n.vx; n.y+=n.vy;
+            if(n.x<0||n.x>W) n.vx*=-1;
+            if(n.y<0||n.y>H) n.vy*=-1;
+
+            ctx.beginPath();
+            ctx.arc(n.x,n.y,3,0,Math.PI*2);
+            ctx.fillStyle='rgba(0,255,255,0.8)';
+            ctx.shadowColor='rgba(0,255,255,0.8)';
+            ctx.shadowBlur=10;
+            ctx.fill();
+
+            // линии к близким
+            nodes.forEach(o=>{
+                let dx=n.x-o.x;
+                let dy=n.y-o.y;
+                let dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist<100){
+                    ctx.beginPath();
+                    ctx.moveTo(n.x,n.y);
+                    ctx.lineTo(o.x,o.y);
+                    ctx.strokeStyle='rgba(0,200,255,'+(1-dist/100)*0.3+')';
+                    ctx.lineWidth=1;
+                    ctx.stroke();
+                }
+            })
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+    window.addEventListener('resize',()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
+    </script>
     """, unsafe_allow_html=True)
 
 # Остальные страницы
