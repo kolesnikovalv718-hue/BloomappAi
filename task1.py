@@ -46,13 +46,7 @@ def run():
     # Кнопки сверху: Скачать CSV / Refresh
     # ---------------------------
     top_cols = st.columns([1,1])
-    with top_cols[0]:
-        st.download_button(
-            label="Скачать CSV",
-            data=st.session_state.df.to_csv(index=False).encode("utf-8"),
-            file_name="blooms_dataset.csv",
-            mime="text/csv"
-        )
+    
     with top_cols[1]:
         if st.button("Обновить"):
             st.experimental_rerun()
