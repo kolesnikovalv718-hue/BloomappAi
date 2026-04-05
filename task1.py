@@ -15,28 +15,28 @@ st.markdown("""
     border: none;
 }
 
-/* По тексту */
-button:has(div:contains("Предыдущая")) {
+/* Цвета по KEY */
+button[data-testid="baseButton-prev"] {
     background-color: #6c757d;
 }
 
-button:has(div:contains("Следующая")) {
+button[data-testid="baseButton-next"] {
     background-color: #0d6efd;
 }
 
-button:has(div:contains("Добавить")) {
+button[data-testid="baseButton-add"] {
     background-color: #198754;
 }
 
-button:has(div:contains("Сохранить")) {
+button[data-testid="baseButton-save"] {
     background-color: #fd7e14;
 }
 
-button:has(div:contains("Удалить")) {
+button[data-testid="baseButton-delete"] {
     background-color: #dc3545;
 }
 
-button:has(div:contains("Прогонщик")) {
+button[data-testid="baseButton-run"] {
     background-color: #6f42c1;
 }
 
@@ -48,6 +48,7 @@ button:has(div:contains("Прогонщик")) {
 
 </style>
 """, unsafe_allow_html=True)
+
     # --- Путь к CSV
     file_path = "blooms_dataset.csv"
 
@@ -186,9 +187,11 @@ button:has(div:contains("Прогонщик")) {
     row1, row2 = st.columns(3), st.columns(3)
 
     # Первая строка
+    
     with row1[0]:
-        if st.button("Предыдущая"):
-            prev_task()
+    if st.button("Предыдущая", key="prev"):
+        prev_task()
+
     with row1[1]:
         if st.button("Следующая"):
             next_task()
