@@ -3,7 +3,7 @@ import streamlit as st
 st.set_page_config(page_title="Меню", layout="wide")
 
 page = st.sidebar.selectbox(
-    "Выбор",
+    "Выбор:",
     ["Главная", "Редактор задач", "Обучение модели",
      "Статистика модели", "Сохранение модели",
      "ученик","экспорт проба","runtask"]
