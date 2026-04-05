@@ -159,6 +159,8 @@ def run():
     with row2[0]:
         if st.button("Сохранить"):
             save_csv()
+        st.markdown("<span style='color:white; background-color:gray; padding:3px; border-radius:5px'>←</span>", unsafe_allow_html=True)
+
     with row2[1]:
         st.download_button(
             label="Скачать CSV",
