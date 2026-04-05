@@ -77,7 +77,7 @@ def run():
 
         # Python code editor
         st.markdown("---")
-        st.subheader("🖥 Редактор Python-кода!")
+        st.subheader("🖥 Редактор Python-кода")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
 
         run_col, check_col, solution_col = st.columns([1,1,1])
@@ -138,28 +138,43 @@ def run():
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Навигационные кнопки в одну строку с разными цветами
+    # Адаптивные навигационные кнопки
     # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
-    buttons_html = f"""
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-      <button onclick="window.parent.postMessage({{func:'prev_task'}}, '*')" style="flex:1; background:#6c757d; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Предыдущая</button>
-      <button onclick="window.parent.postMessage({{func:'next_task'}}, '*')" style="flex:1; background:#0d6efd; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Следующая</button>
-      <button onclick="window.parent.postMessage({{func:'add_task'}}, '*')" style="flex:1; background:#198754; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Добавить</button>
-      <button onclick="window.parent.postMessage({{func:'save_csv'}}, '*')" style="flex:1; background:#ffc107; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Сохранить</button>
-      <button onclick="window.parent.postMessage({{func:'download_csv'}}, '*')" style="flex:1; background:#0dcaf0; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Скачать CSV</button>
-      <button onclick="window.parent.postMessage({{func:'delete_task'}}, '*')" style="flex:1; background:#dc3545; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Удалить</button>
+    buttons_html = """
+    <div class="button-row">
+      <button onclick="window.parent.postMessage({func:'prev_task'}, '*')" style="background:#6c757d;">Предыдущая</button>
+      <button onclick="window.parent.postMessage({func:'next_task'}, '*')" style="background:#0d6efd;">Следующая</button>
+      <button onclick="window.parent.postMessage({func:'add_task'}, '*')" style="background:#198754;">Добавить</button>
+      <button onclick="window.parent.postMessage({func:'save_csv'}, '*')" style="background:#ffc107;">Сохранить</button>
+      <button onclick="window.parent.postMessage({func:'download_csv'}, '*')" style="background:#0dcaf0;">Скачать CSV</button>
+      <button onclick="window.parent.postMessage({func:'delete_task'}, '*')" style="background:#dc3545;">Удалить</button>
     </div>
+
     <style>
-    button:hover {{
-        transform: scale(1.05);
-        transition: all 0.2s ease;
-    }}
+    .button-row{
+      display:flex;
+      flex-wrap:wrap; /* кнопки переходят на новую строку на маленьких экранах */
+      gap:10px;
+      margin-bottom:20px;
+    }
+    .button-row button{
+      flex:1 1 45%; /* минимум 45%, растягивается по возможности */
+      color:white;
+      border:none;
+      padding:12px 20px;
+      border-radius:10px;
+      cursor:pointer;
+      transition: all 0.2s ease;
+    }
+    .button-row button:hover{
+      transform: scale(1.05);
+    }
     </style>
     """
-    components.html(buttons_html, height=70)
+    components.html(buttons_html, height=100)
 
     # ---------------------------
     # Рендер текущей задачи
