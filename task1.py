@@ -42,6 +42,24 @@ def run():
     }
 
     # ---------------------------
+    # Фильтры сверху
+    # ---------------------------
+    st.header("Фильтр задач")
+    filter_topic = st.text_input("Фильтр по теме:", "")
+    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
+
+    filtered_df = st.session_state.df.copy()
+    if filter_topic:
+        filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
+    if filter_bloom != "Все":
+        filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
+
+    if len(filtered_df) == 0:
+        st.warning("По фильтру нет задач")
+    else:
+        st.info(f"Задач после фильтра: {len(filtered_df)}")
+
+    # ---------------------------
     # Функции
     # ---------------------------
     def save_current_task():
@@ -58,6 +76,7 @@ def run():
         st.success(f"Сохранено! Файл: {file_path}")
 
     def render_task(idx):
+        st.subheader(f"Редактор задачи №{idx+1}")
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
@@ -113,13 +132,11 @@ def run():
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
             st.session_state.current_index += 1
-            st.experimental_rerun()
 
     def prev_task():
         save_current_task()
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
-            st.experimental_rerun()
 
     def add_task():
         save_current_task()
@@ -136,11 +153,9 @@ def run():
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Интерфейс
+    # Навигация и кнопки
     # ---------------------------
-    st.title("Редактор задач с Bloom + LaTeX + Python")
-    st.info(f"Всего задач: {len(st.session_state.df)}")
-
+    st.markdown("---")
     cols = st.columns(6)
     with cols[0]:
         if st.button("Предыдущая"):
@@ -165,9 +180,9 @@ def run():
         if st.button("Удалить"):
             delete_task()
 
-    st.markdown("---")
-
+    # ---------------------------
     # Рендер текущей задачи
+    # ---------------------------
     if len(st.session_state.df) > 0:
         render_task(st.session_state.current_index)
     else:
