@@ -41,7 +41,7 @@ def run():
                         task_id += 1
                         current_task = {
                             "id": task_id,
-                            "задание": text,
+                            "задание": text or "",
                             "формула": "",
                             "картинки": [],
                             "решение": ""
@@ -49,11 +49,11 @@ def run():
 
                     elif current_task:
                         if text.startswith("Формула"):
-                            current_task["формула"] += text.replace("Формула:", "").strip()
+                            current_task["формула"] = (current_task.get("формула") or "") + "\n" + text.replace("Формула:", "").strip()
                         elif text.startswith("Решение"):
-                            current_task["решение"] += text.replace("Решение:", "").strip()
+                            current_task["решение"] = (current_task.get("решение") or "") + "\n" + text.replace("Решение:", "").strip()
                         elif text:
-                            current_task["задание"] += "\n" + text
+                            current_task["задание"] = (current_task.get("задание") or "") + "\n" + text
 
                     # --- ищем картинки ---
                     for rel in doc.part.rels.values():
@@ -102,6 +102,6 @@ def run():
                 # ===== Показ формул через st.latex() =====
                 st.subheader("Формулы (LaTeX)")
                 for t in tasks:
-                    if t["формула"]:
+                    if t.get("формула"):
                         st.write(f"Задача {t['id']}:")
                         st.latex(t["формула"])
