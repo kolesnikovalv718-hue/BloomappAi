@@ -43,6 +43,24 @@ def run():
     }
 
     # ---------------------------
+    # Фильтры сверху
+    # ---------------------------
+    st.header("Фильтр задач")
+    filter_topic = st.text_input("Фильтр по теме:", "")
+    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
+
+    filtered_df = st.session_state.df.copy()
+    if filter_topic:
+        filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
+    if filter_bloom != "Все":
+        filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
+
+    if len(filtered_df) == 0:
+        st.warning("По фильтру нет задач")
+    else:
+        st.info(f"Задач после фильтра: {len(filtered_df)}")
+
+    # ---------------------------
     # Функции для работы с задачей
     # ---------------------------
     def save_current_task():
@@ -59,6 +77,7 @@ def run():
         st.success(f"Сохранено! Файл: {file_path}")
 
     def render_task(idx):
+        st.subheader(f"Редактор задачи №{idx+1}")
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
@@ -114,20 +133,14 @@ def run():
     # Навигация
     # ---------------------------
     def next_task():
-        if "current_index" not in st.session_state:
-            st.session_state.current_index = 0
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
             st.session_state.current_index += 1
-            st.experimental_rerun()
 
     def prev_task():
-        if "current_index" not in st.session_state:
-            st.session_state.current_index = 0
         save_current_task()
         if st.session_state.current_index > 0:
             st.session_state.current_index -= 1
-            st.experimental_rerun()
 
     def add_task():
         save_current_task()
@@ -153,12 +166,15 @@ def run():
     with cols[0]:
         if st.button("Предыдущая"):
             prev_task()
+            st.experimental_rerun()
     with cols[1]:
         if st.button("Следующая"):
             next_task()
+            st.experimental_rerun()
     with cols[2]:
         if st.button("Добавить"):
             add_task()
+            st.experimental_rerun()
     with cols[3]:
         if st.button("Сохранить"):
             save_csv()
@@ -172,6 +188,7 @@ def run():
     with cols[5]:
         if st.button("Удалить"):
             delete_task()
+            st.experimental_rerun()
 
     st.markdown("---")
 
@@ -184,23 +201,23 @@ def run():
         st.warning("Нет задач")
 
     # ---------------------------
-    # Фильтры и список задач
+    # Список задач и фильтры снизу
     # ---------------------------
     st.markdown("---")
     st.header("Список задач")
-    filter_topic = st.text_input("Фильтр по теме:")
-    filter_bloom = st.selectbox("Фильтр Bloom:", options=["Все"] + list(bloom_colors.keys()))
+    filter_topic_bottom = st.text_input("Фильтр по теме (снизу):")
+    filter_bloom_bottom = st.selectbox("Фильтр Bloom (снизу):", options=["Все"] + list(bloom_colors.keys()), key="filter_bottom")
 
-    filtered_df = st.session_state.df.copy()
-    if filter_topic:
-        filtered_df = filtered_df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
-    if filter_bloom != "Все":
-        filtered_df = filtered_df[filtered_df["bloom"] == filter_bloom]
+    filtered_df_bottom = st.session_state.df.copy()
+    if filter_topic_bottom:
+        filtered_df_bottom = filtered_df_bottom[filtered_df_bottom["topic"].str.lower().str.contains(filter_topic_bottom.lower())]
+    if filter_bloom_bottom != "Все":
+        filtered_df_bottom = filtered_df_bottom[filtered_df_bottom["bloom"] == filter_bloom_bottom]
 
-    if len(filtered_df) == 0:
+    if len(filtered_df_bottom) == 0:
         st.warning("По фильтру нет задач")
     else:
-        for i, row in filtered_df.iterrows():
+        for i, row in filtered_df_bottom.iterrows():
             color = bloom_colors.get(row["bloom"], "black")
             st.markdown(f"---\n**№ {i+1}**: {row['text']}\n**Bloom:** <span style='color:{color}'>{row['bloom']}</span>\n**Тема:** {row['topic']}", unsafe_allow_html=True)
 
