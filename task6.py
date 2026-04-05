@@ -1,4 +1,3 @@
-
 # ---------------------------
 # Task6 для ученика с кодом, проверкой и ИИ-пояснением
 # ---------------------------
@@ -8,6 +7,8 @@ import pandas as pd
 import os
 import requests
 import re
+import io
+import sys
 
 # ---------------------------
 # Hugging Face API для пояснений
@@ -143,33 +144,45 @@ def run():
         # ---------------------------
         student_code = st.text_area("Введите код для решения задачи (если нужно):", height=150)
 
-        # Кнопка выполнения кода с автоматическим захватом результата
+        # Кнопка выполнения кода с перехватом print и eval последней строки
         if st.button("Выполнить код"):
+            old_stdout = sys.stdout
+            redirected_output = sys.stdout = io.StringIO()  # перехват print
+            result = None
             try:
-                code_lines = student_code.strip().split("\n")
                 local_vars = {}
+                code_lines = student_code.strip().split("\n")
 
                 if len(code_lines) > 1:
-                    # выполняем все строки кроме последней
                     exec("\n".join(code_lines[:-1]), {}, local_vars)
 
                 last_line = code_lines[-1]
-                # если последняя строка присваивание result, берем переменную
+
                 if "=" in last_line:
                     exec(last_line, {}, local_vars)
                     var_name = last_line.split("=")[0].strip()
-                    st.session_state.student_result = local_vars.get(var_name, None)
+                    result = local_vars.get(var_name)
                 else:
-                    # последняя строка как выражение
-                    st.session_state.student_result = eval(last_line, {}, local_vars)
+                    try:
+                        result = eval(last_line, {}, local_vars)
+                    except:
+                        exec(last_line, {}, local_vars)
 
+                printed = redirected_output.getvalue()
+                if printed:
+                    result = printed.strip()
+
+                st.session_state.student_result = result
                 st.success(f"Код выполнен, результат: {st.session_state.student_result}")
                 st.session_state.checked = True
+
             except Exception as e:
                 st.error(f"Ошибка выполнения кода: {e}")
+            finally:
+                sys.stdout = old_stdout  # восстановление stdout
 
         # ---------------------------
-        # Пояснение от ИИ (появляется после проверки или показа ответа)
+        # Пояснение от ИИ
         # ---------------------------
         if st.session_state.checked or st.session_state.show_answer:
             st.markdown("---")
