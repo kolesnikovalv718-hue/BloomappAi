@@ -1,6 +1,6 @@
 # ---------------------------
 # Глобальная загрузка df
-# ---------------------------
+# ---------------------------не
 import pandas as pd
 import os
 
@@ -85,18 +85,11 @@ def run():
         df.to_csv(file_path, index=False, encoding='utf-8')
         st.success(f"Сохранено! Файл: {file_path}")
 
-    def save_csv():
-        save_current_task()
-        global df
-        df = st.session_state.df.copy()  # сохраняем изменения в глобальный df
-        df.to_csv(file_path, index=False, encoding='utf-8')
-        st.success(f"Сохранено! Файл: {file_path}")
-
+    
+    
     # ---------------------------
     # Дальше весь твой render_task, навигация, кнопки, фильтры
     # ---------------------------
-    # ... здесь остаётся весь твой код без изменений ...
-
     
     
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
