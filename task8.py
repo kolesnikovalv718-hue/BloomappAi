@@ -1,4 +1,4 @@
-# task8.py
+# task8.py экспорт из ворд доработать 
 import streamlit as st
 import docx
 import pandas as pd
