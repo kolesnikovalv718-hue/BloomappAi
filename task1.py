@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import os
-import streamlit.components.v1 as components
 
 def run():
     # ---------------------------
@@ -138,43 +137,59 @@ def run():
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Адаптивные навигационные кнопки
+    # Навигационные кнопки (адаптивные)
     # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
-    buttons_html = """
-    <div class="button-row">
-      <button onclick="window.parent.postMessage({func:'prev_task'}, '*')" style="background:#6c757d;">Предыдущая</button>
-      <button onclick="window.parent.postMessage({func:'next_task'}, '*')" style="background:#0d6efd;">Следующая</button>
-      <button onclick="window.parent.postMessage({func:'add_task'}, '*')" style="background:#198754;">Добавить</button>
-      <button onclick="window.parent.postMessage({func:'save_csv'}, '*')" style="background:#ffc107;">Сохранить</button>
-      <button onclick="window.parent.postMessage({func:'download_csv'}, '*')" style="background:#0dcaf0;">Скачать CSV</button>
-      <button onclick="window.parent.postMessage({func:'delete_task'}, '*')" style="background:#dc3545;">Удалить</button>
-    </div>
+    row1, row2 = st.columns(3), st.columns(3)
 
-    <style>
-    .button-row{
-      display:flex;
-      flex-wrap:wrap; /* кнопки переходят на новую строку на маленьких экранах */
-      gap:10px;
-      margin-bottom:20px;
-    }
-    .button-row button{
-      flex:1 1 45%; /* минимум 45%, растягивается по возможности */
-      color:white;
-      border:none;
-      padding:12px 20px;
-      border-radius:10px;
-      cursor:pointer;
-      transition: all 0.2s ease;
-    }
-    .button-row button:hover{
-      transform: scale(1.05);
-    }
-    </style>
-    """
-    components.html(buttons_html, height=100)
+    # Первая строка
+    with row1[0]:
+        if st.button("Предыдущая"):
+            prev_task()
+    with row1[1]:
+        if st.button("Следующая"):
+            next_task()
+    with row1[2]:
+        if st.button("Добавить"):
+            add_task()
+
+    # Вторая строка
+    with row2[0]:
+        if st.button("Сохранить"):
+            save_csv()
+    with row2[1]:
+        st.download_button(
+            label="Скачать CSV",
+            data=st.session_state.df.to_csv(index=False).encode("utf-8"),
+            file_name="blooms_dataset.csv",
+            mime="text/csv"
+        )
+    with row2[2]:
+        if st.button("Удалить"):
+            delete_task()
+
+    # ---------------------------
+    # Кнопка Прогонщик (выполнить код текущей задачи)
+    # ---------------------------
+    st.markdown("---")
+    if st.button("🚀 Прогонщик: выполнить код текущей задачи"):
+        idx = st.session_state.current_index
+        code_val = st.session_state.get(f"code_{idx}", "")
+        if code_val.strip() == "":
+            st.warning("Код пустой")
+        else:
+            with st.expander("Результат выполнения", expanded=True):
+                try:
+                    local_vars = {}
+                    exec(code_val, {}, local_vars)
+                    if "result" in local_vars:
+                        st.success(f"Результат: {local_vars['result']}")
+                    else:
+                        st.success("Код выполнен")
+                except Exception as e:
+                    st.error(f"Ошибка выполнения: {e}")
 
     # ---------------------------
     # Рендер текущей задачи
