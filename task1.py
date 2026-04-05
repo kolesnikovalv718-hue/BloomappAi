@@ -1,21 +1,15 @@
-# task1.py
-import streamlit as st
-import pandas as pd
-import os
-
-# ---------------------------
-# Путь к CSV (глобально)
-# ---------------------------
-file_path = "blooms_dataset.csv"
-
 # ---------------------------
 # Глобальная загрузка df
 # ---------------------------
+import pandas as pd
+import os
+
+file_path = "blooms_dataset.csv"
+
 if os.path.exists(file_path):
     try:
         df = pd.read_csv(file_path, encoding='utf-8', keep_default_na=False)
     except Exception as e:
-        st.error(f"Ошибка при чтении CSV: {e}")
         df = pd.DataFrame({
             "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
             "answer": [""],
@@ -36,17 +30,13 @@ else:
 df = df.fillna("")
 
 # ---------------------------
-# Основная обёртка страницы
+# run()
 # ---------------------------
 def run():
-    global df  # добавили глобальный df
-    # ---------------------------
-    # Инициализация session_state
-    # ---------------------------
-    if "df" not in st.session_state:
-        st.session_state.df = df.copy()  # читаем из глобального df
+    global df, file_path
     if "current_index" not in st.session_state:
         st.session_state.current_index = 0
+    idx = st.session_state.current_index
 
     bloom_colors = {
         "Remembering": "gray",
@@ -58,17 +48,42 @@ def run():
     }
 
     # ---------------------------
-    # Функции работы с задачами
+    # Рендер текущей задачи напрямую с файла
+    # ---------------------------
+    def render_task(idx):
+        global df
+        if idx >= len(df):
+            st.warning("Задача не найдена")
+            return
+
+        # Читаем значения прямо из df, но ключи session_state для редактирования
+        st.text_area("Задача:", value=st.session_state.get(f"text_{idx}", df.loc[idx, "text"]), key=f"text_{idx}", height=80)
+        st.text_area("Ответ:", value=st.session_state.get(f"answer_{idx}", df.loc[idx, "answer"]), key=f"answer_{idx}", height=80)
+        st.text_input("Тема:", value=st.session_state.get(f"topic_{idx}", df.loc[idx, "topic"]), key=f"topic_{idx}")
+        st.text_input("Междисциплинарная:", value=st.session_state.get(f"inter_{idx}", df.loc[idx, "interdisciplinary"]), key=f"inter_{idx}")
+        bloom_val = st.selectbox(
+            "Bloom:",
+            options=list(bloom_colors.keys()),
+            index=list(bloom_colors.keys()).index(df.loc[idx, "bloom"]) if df.loc[idx, "bloom"] in bloom_colors else 0,
+            key=f"bloom_{idx}"
+        )
+        st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
+
+    # ---------------------------
+    # Сохранение изменений
     # ---------------------------
     def save_current_task():
-        idx = st.session_state.current_index
-        if idx >= len(st.session_state.df):
-            return
-        st.session_state.df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", "")
-        st.session_state.df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", "")
-        st.session_state.df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", "")
-        st.session_state.df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", "")
-        st.session_state.df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", "Remembering")
+        global df
+        df.loc[idx, "text"] = st.session_state.get(f"text_{idx}", df.loc[idx, "text"])
+        df.loc[idx, "answer"] = st.session_state.get(f"answer_{idx}", df.loc[idx, "answer"])
+        df.loc[idx, "topic"] = st.session_state.get(f"topic_{idx}", df.loc[idx, "topic"])
+        df.loc[idx, "interdisciplinary"] = st.session_state.get(f"inter_{idx}", df.loc[idx, "interdisciplinary"])
+        df.loc[idx, "bloom"] = st.session_state.get(f"bloom_{idx}", df.loc[idx, "bloom"])
+
+    def save_csv():
+        save_current_task()
+        df.to_csv(file_path, index=False, encoding='utf-8')
+        st.success(f"Сохранено! Файл: {file_path}")
 
     def save_csv():
         save_current_task()
@@ -83,14 +98,11 @@ def run():
     # ... здесь остаётся весь твой код без изменений ...
 
     
-    def render_task(idx):
-        if idx >= len(st.session_state.df):
-            st.warning("Задача не найдена")
-            return
-
+    
         st.text_area("Задача:", value=st.session_state.df.loc[idx, "text"], key=f"text_{idx}", height=80)
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
-        st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
+        st.text_input("Тема:
+        ", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
         st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
         bloom_val = st.selectbox("Bloom:", options=list(bloom_colors.keys()),
                                  index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]) 
