@@ -77,7 +77,7 @@ def run():
 
         # Python code editor
         st.markdown("---")
-        st.subheader("🖥 Редактор Python-кода")
+        st.subheader("🖥 Редактор Python-кода!")
         code_val = st.text_area("Код:", key=f"code_{idx}", height=120)
 
         run_col, check_col, solution_col = st.columns([1,1,1])
