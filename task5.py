@@ -1,0 +1,72 @@
+# -------------------------------------------------
+# Task 5: Страница обучения модели с GridSearchCV
+# Здесь:
+# - загрузка CSV
+# - TF-IDF векторизация
+# - логистическая регрессия с подбором гиперпараметров через GridSearchCV
+# - оценка точности модели и отчет классификации
+# -------------------------------------------------
+import streamlit as st
+import pandas as pd
+import os
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+def run():
+    st.title("Обучение модели с GridSearchCV")
+    st.markdown("---")
+
+    if st.button("Обучить модель"):
+        st.write("Запуск обучения... Это может занять несколько секунд ⏳")
+
+        file_path = "blooms_dataset.csv"
+
+        if not os.path.exists(file_path):
+            st.error("Файл не найден")
+            return
+
+        df = pd.read_csv(file_path, encoding="utf-8")
+
+        # Проверка колонок
+        if "text" not in df.columns or "bloom" not in df.columns:
+            st.error("Нет нужных колонок (text, bloom)")
+            return
+
+        X = df["text"]
+        y = df["bloom"]
+
+        # Разделение данных
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        # TF-IDF векторизация
+        vectorizer = TfidfVectorizer(max_features=500, stop_words='english')
+        X_train_tfidf = vectorizer.fit_transform(X_train)
+        X_test_tfidf = vectorizer.transform(X_test)
+
+        # -------------------------------
+        # GridSearchCV для логистической регрессии
+        # -------------------------------
+        param_grid = {
+            'C': [0.1, 1, 10],
+            'solver': ['liblinear', 'saga'],
+            'max_iter': [1000, 2000]
+        }
+
+        st.write("Идет поиск лучших гиперпараметров... ⏳")
+        grid_search = GridSearchCV(LogisticRegression(class_weight='balanced'), param_grid, cv=5)
+        grid_search.fit(X_train_tfidf, y_train)
+
+        best_model = grid_search.best_estimator_
+        st.success(f"Лучшие параметры: {grid_search.best_params_}")
+
+        # Предсказания и оценка
+        y_pred = best_model.predict(X_test_tfidf)
+        accuracy = accuracy_score(y_test, y_pred)
+        st.success(f"Готово ✅ Точность модели на тестовой выборке: {accuracy:.2%}")
+
+        st.write("Отчет классификации:")
+        st.text(classification_report(y_test, y_pred, zero_division=1))
