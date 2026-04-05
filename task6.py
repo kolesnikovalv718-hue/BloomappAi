@@ -3,29 +3,39 @@ import streamlit as st
 import pandas as pd
 import os
 
+# ---------------------------
+# Функция запуска для ученика
+# ---------------------------
 def run():
-    # ---------------------------
-    # Заголовок и описание
-    # ---------------------------
-    st.title("📚 Учебные задачи")
-    st.markdown("Выбирай задачу и решай! Сверху можно фильтровать по теме.")
+    """
+    Задачи для ученика:
+    - Фильтр по теме
+    - Выбор задачи по кнопкам
+    - Проверка ответа
+    - Пояснение от GPT (только объяснение)
+    - Прогресс
+    """
 
     # ---------------------------
-    # Путь к CSV с задачами
+    # Загрузка данных
     # ---------------------------
     file_path = "blooms_dataset.csv"
 
-    if not os.path.exists(file_path):
-        st.error("Файл с задачами не найден")
-        return
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path, encoding='utf-8')
+    else:
+        st.warning("Файл задач не найден. Пример загружен.")
+        df = pd.DataFrame({
+            "text": ["Пример:\n$$ P(6)=\\frac{1}{6} $$"],
+            "answer": [""],
+            "level": ["Знание"],
+            "bloom": ["Remembering"],
+            "topic": ["Probability"]
+        })
+    df = df.fillna("")
 
     # ---------------------------
-    # Загрузка CSV
-    # ---------------------------
-    df = pd.read_csv(file_path, encoding='utf-8').fillna("")
-
-    # ---------------------------
-    # Цвета для Bloom
+    # Bloom цвета
     # ---------------------------
     bloom_colors = {
         "Remembering": "gray",
@@ -37,77 +47,70 @@ def run():
     }
 
     # ---------------------------
+    # Session state
+    # ---------------------------
+    if "current_index" not in st.session_state:
+        st.session_state.current_index = 0
+    if "filtered_indices" not in st.session_state:
+        st.session_state.filtered_indices = list(range(len(df)))
+
+    # ---------------------------
     # Фильтр по теме
     # ---------------------------
-    all_topics = ["Все"] + sorted(df["topic"].dropna().unique().tolist())
-    selected_topic = st.selectbox("Фильтр по теме:", all_topics)
+    st.header("Фильтр по теме")
+    filter_topic = st.text_input("Введите тему:")
+    filtered_df = df.copy()
+    if filter_topic:
+        filtered_df = df[filtered_df["topic"].str.lower().str.contains(filter_topic.lower())]
+    st.session_state.filtered_indices = filtered_df.index.tolist()
 
-    if selected_topic != "Все":
-        filtered_df = df[df["topic"] == selected_topic].reset_index()
-    else:
-        filtered_df = df.reset_index()
-
-    # ---------------------------
-    # Состояние выбранной задачи
-    # ---------------------------
-    if "current_task" not in st.session_state:
-        st.session_state.current_task = 0
+    if len(st.session_state.filtered_indices) == 0:
+        st.warning("Нет задач по выбранной теме")
+        return
 
     # ---------------------------
-    # Выбор задачи кнопками
+    # Кнопки выбора задачи
     # ---------------------------
-    st.markdown("**Выберите задачу:**")
-    cols = st.columns(min(10, len(filtered_df)))
-    for i, row in filtered_df.iterrows():
-        col = cols[i % len(cols)]
-        if col.button(str(i + 1)):
-            st.session_state.current_task = i
+    st.subheader("Выберите задачу")
+    cols = st.columns(10)
+    for idx, task_idx in enumerate(st.session_state.filtered_indices):
+        if cols[idx % 10].button(f"{task_idx+1}", key=f"btn_{task_idx}"):
+            st.session_state.current_index = task_idx
 
     # ---------------------------
-    # Показ выбранной задачи
+    # Текущая задача
     # ---------------------------
-    task_idx = st.session_state.current_task
-    if task_idx >= len(filtered_df):
-        task_idx = 0
-    st.session_state.current_task = task_idx
-
-    task = filtered_df.loc[task_idx]
+    idx = st.session_state.current_index
+    task = df.loc[idx]
 
     st.markdown("---")
-    st.markdown(f"**Задача {task_idx + 1} из {len(filtered_df)}**")
-    st.markdown(f"**Тема:** {task['topic']}")
+    st.markdown(f"**Задача {idx+1}/{len(df)}**")
     st.markdown(f"**Bloom:** <span style='color:{bloom_colors.get(task['bloom'], 'black')}'>{task['bloom']}</span>", unsafe_allow_html=True)
-
-    # Текст задачи и ответ
-    st.subheader("Задача:")
+    st.markdown(f"**Тема:** {task['topic']}")
+    st.markdown("---")
     st.markdown(task["text"], unsafe_allow_html=True)
 
     # ---------------------------
-    # Ввод ответа и проверка
+    # Поле для ответа
     # ---------------------------
-    answer_input = st.text_area("Ваш ответ:")
-
-    if st.button("Проверить ответ"):
-        correct = str(task["answer"]).strip()
-        if answer_input.strip() == correct:
-            st.success("✅ Правильно!")
+    answer_input = st.text_area("Ваш ответ:", key=f"answer_{idx}", height=100)
+    if st.button("Проверить ответ", key=f"check_{idx}"):
+        correct_answer = str(task["answer"]).strip()
+        if answer_input.strip() == correct_answer:
+            st.success("✅ Верно!")
         else:
-            st.error(f"❌ Неправильно. Правильный ответ:\n{correct}")
+            st.error(f"❌ Неверно. Правильный ответ:\n{correct_answer}")
 
     # ---------------------------
-    # Выполнение Python-кода
+    # Пояснение GPT (только объяснение)
     # ---------------------------
-    st.subheader("🖥 Выполнить Python-код")
-    code_input = st.text_area("Введите код для выполнения:", height=120)
+    st.markdown("---")
+    if st.button("Объяснить с GPT", key=f"gpt_{idx}"):
+        # Здесь можно вызвать GPT API с задачей и ответом
+        st.info("💡 Пояснение (пример без API):\nОбъяснение шагов решения задачи, рассуждения и логики, без готового ответа.")
 
-    if st.button("Выполнить код"):
-        with st.expander("Результат выполнения", expanded=True):
-            try:
-                local_vars = {}
-                exec(code_input, {}, local_vars)
-                if "result" in local_vars:
-                    st.write("Результат:", local_vars["result"])
-                else:
-                    st.write("Код выполнен")
-            except Exception as e:
-                st.error(f"Ошибка выполнения: {e}")
+    # ---------------------------
+    # Прогресс
+    # ---------------------------
+    st.markdown("---")
+    st.info(f"Прогресс: задача {st.session_state.current_index+1} из {len(df)}")
