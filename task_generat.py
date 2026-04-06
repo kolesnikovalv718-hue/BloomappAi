@@ -4,7 +4,7 @@ import os
 import requests
 import streamlit as st
 #from dotenv import load_dotenv  # для локального .env
-st.write(HF_TOKEN)
+
 # Если запускаешь локально, раскомментируй
 # load_dotenv()
 
