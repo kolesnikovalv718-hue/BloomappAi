@@ -52,7 +52,15 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
 
 </style>
 """, unsafe_allow_html=True)
+    import joblib
 
+     model = joblib.load("model.pkl")
+     vectorizer = joblib.load("vectorizer.pkl")
+
+     def predict_bloom(text):
+        vec = vectorizer.transform([text])
+        return model.predict(vec)[0]
+         
     # --- Путь к CSV
     file_path = "blooms_dataset.csv"
 
@@ -82,7 +90,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
         "Remembering": "gray",
         "Understanding": "blue",
         "Applying": "green",
-        "Analyzing": "orange",
+        "Analyzing" : "orange",
         "Evaluating": "red",
         "Creating": "purple"
     }
