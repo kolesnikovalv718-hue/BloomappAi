@@ -54,9 +54,6 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
 </style>
 """, unsafe_allow_html=True) 
     
-    # --- Путь к CSV
-    file_path = "blooms_dataset.csv"
-
     # --- Загрузка модели и векторизатора
     model = joblib.load("model.pkl")
     vectorizer = joblib.load("vectorizer.pkl")
@@ -64,6 +61,9 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
     def predict_bloom(text):
         vec = vectorizer.transform([text])
         return model.predict(vec)[0]
+
+    # --- Путь к CSV
+    file_path = "blooms_dataset.csv"
 
     # --Загрузка или создание CSV
     if os.path.exists(file_path):
@@ -118,8 +118,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
         st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
 
-        # ---------------------------
-        # Bloom select + Predict кнопка
+        # --- Bloom с кнопкой предсказания
         bloom_col, predict_col = st.columns([2,1])
         with bloom_col:
             bloom_val = st.selectbox(
@@ -185,6 +184,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
 
     # ---------------------------
     # Навигация
+    # ---------------------------
     def next_task():
         save_current_task()
         if st.session_state.current_index < len(st.session_state.df) - 1:
@@ -211,30 +211,26 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
 
     # ---------------------------
     # Навигационные кнопки
+    # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
     row1, row2 = st.columns(3), st.columns(3)
 
-    # Первая строка
     with row1[0]:
         if st.button("Предыдущая"):
             prev_task()
-
     with row1[1]:
         if st.button("Следующая"):
             next_task()
-
     with row1[2]:
         if st.button("Добавить"):
             add_task()
 
-    # Вторая строка
     with row2[0]:
         if st.button("Сохранить"):
             save_csv()
         st.markdown("<span style='color:white; background-color:gray; padding:3px; border-radius:5px'>←</span>", unsafe_allow_html=True)
-
     with row2[1]:
         st.download_button(
             label="Скачать CSV",
@@ -242,12 +238,13 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
             file_name="blooms_dataset.csv",
             mime="text/csv"
         )
-
     with row2[2]:
         if st.button("Удалить"):
             delete_task()
 
+    # ---------------------------
     # Прогонщик
+    # ---------------------------
     st.markdown("---")
     if st.button("🚀 Прогонщик: выполнить код текущей задачи"):
         idx = st.session_state.current_index
@@ -266,13 +263,17 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
                 except Exception as e:
                     st.error(f"Ошибка выполнения: {e}")
 
+    # ---------------------------
     # Рендер текущей задачи
+    # ---------------------------
     if len(st.session_state.df) > 0:
         render_task(st.session_state.current_index)
     else:
         st.warning("Нет задач")
 
-    # Список задач снизу
+    # ---------------------------
+    # Фильтры и список задач снизу
+    # ---------------------------
     st.markdown("---")
     st.header("Список задач")
     filter_topic = st.text_input("Фильтр по теме (снизу):")
@@ -294,7 +295,9 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
                 unsafe_allow_html=True
             )
 
+    # ---------------------------
     # Статистика Bloom
+    # ---------------------------
     st.markdown("---")
     st.header("📊 Статистика по уровням Bloom")
     counts = st.session_state.df['bloom'].value_counts()
