@@ -191,11 +191,9 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
     row1, row2 = st.columns(3), st.columns(3)
 
     # Первая строка
-    
     with row1[0]:
-    if st.button("Предыдущая", key="prev"):
+      if st.button("Предыдущая"):
         prev_task()
-    
 
     with row1[1]:
         if st.button("Следующая"):
