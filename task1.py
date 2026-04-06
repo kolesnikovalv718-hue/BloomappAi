@@ -117,10 +117,11 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
         st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
-        
+
         # ----------------- BLOOM с кнопкой предсказания -----------------
         bloom_col, predict_col = st.columns([2,1])
-        predicted_bloom = st.session_state.df.loc[idx, "bloom"]  # текущий Bloom
+        current_bloom = st.session_state.df.loc[idx, "bloom"]  # текущий Bloom
+        predicted_bloom = current_bloom  # для selectbox
 
         with predict_col:
             if st.button("Предсказать Bloom", key=f"predict_{idx}"):
@@ -139,6 +140,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
                 index=list(bloom_colors.keys()).index(predicted_bloom),
                 key=f"bloom_{idx}"
             )
+
         st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
         # LaTeX preview
