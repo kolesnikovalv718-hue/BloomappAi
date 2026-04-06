@@ -17,7 +17,8 @@ def run():
 }
 
 /* ПЕРВАЯ СТРОКА */
-div[data-testid="column"]:nth-of-type(1) .stButton > button {
+   
+button[id*="prev"] {
     background: linear-gradient(45deg, #6c757d, #495057);
 }
 
@@ -192,8 +193,9 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
     # Первая строка
     
     with row1[0]:
-    if st.button("Предыдущая"):
+    if st.button("Предыдущая", key="prev"):
         prev_task()
+    
 
     with row1[1]:
         if st.button("Следующая"):
