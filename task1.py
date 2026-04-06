@@ -54,6 +54,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
 </style>
 """, unsafe_allow_html=True) 
     
+    # --- Путь к CSV
     # --- Загрузка модели и векторизатора
     model = joblib.load("model.pkl")
     vectorizer = joblib.load("vectorizer.pkl")
@@ -62,7 +63,6 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
         vec = vectorizer.transform([text])
         return model.predict(vec)[0]
 
-    # --- Путь к CSV
     file_path = "blooms_dataset.csv"
 
     # --Загрузка или создание CSV
@@ -117,17 +117,10 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
         st.text_area("Ответ:", value=st.session_state.df.loc[idx, "answer"], key=f"answer_{idx}", height=80)
         st.text_input("Тема:", value=st.session_state.df.loc[idx, "topic"], key=f"topic_{idx}")
         st.text_input("Междисциплинарная:", value=st.session_state.df.loc[idx, "interdisciplinary"], key=f"inter_{idx}")
-
-        # --- Bloom с кнопкой предсказания
+        
+        # ----------------- BLOOM с кнопкой предсказания -----------------
         bloom_col, predict_col = st.columns([2,1])
-        with bloom_col:
-            bloom_val = st.selectbox(
-                "Bloom:",
-                options=list(bloom_colors.keys()),
-                index=list(bloom_colors.keys()).index(st.session_state.df.loc[idx, "bloom"]),
-                key=f"bloom_{idx}"
-            )
-            st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
+        predicted_bloom = st.session_state.df.loc[idx, "bloom"]  # текущий Bloom
 
         with predict_col:
             if st.button("Предсказать Bloom", key=f"predict_{idx}"):
@@ -135,10 +128,18 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
                 if text.strip() == "":
                     st.warning("Сначала введите текст задачи")
                 else:
-                    predicted = predict_bloom(text)
-                    st.session_state.df.loc[idx, "bloom"] = predicted
-                    st.session_state[f"bloom_{idx}"] = predicted
-                    st.success(f"Bloom автоматически: {predicted}")
+                    predicted_bloom = predict_bloom(text)
+                    st.session_state.df.loc[idx, "bloom"] = predicted_bloom
+                    st.success(f"Bloom автоматически: {predicted_bloom}")
+
+        with bloom_col:
+            bloom_val = st.selectbox(
+                "Bloom:",
+                options=list(bloom_colors.keys()),
+                index=list(bloom_colors.keys()).index(predicted_bloom),
+                key=f"bloom_{idx}"
+            )
+        st.markdown(f"**Bloom:** <span style='color:{bloom_colors[bloom_val]}'>{bloom_val}</span>", unsafe_allow_html=True)
 
         # LaTeX preview
         st.markdown("---")
@@ -183,7 +184,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
                     st.info(f"💡 Решение:\n{solution}")
 
     # ---------------------------
-    # Навигация
+    # Навигация без st.experimental_rerun
     # ---------------------------
     def next_task():
         save_current_task()
@@ -210,16 +211,18 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
             st.session_state.current_index = max(0, idx-1)
 
     # ---------------------------
-    # Навигационные кнопки
+    # Навигационные кнопки (адаптивные)
     # ---------------------------
     st.title("Редактор задач с Bloom + LaTeX + Python")
     st.info(f"Всего задач: {len(st.session_state.df)}")
 
     row1, row2 = st.columns(3), st.columns(3)
 
+    # Первая строка
     with row1[0]:
-        if st.button("Предыдущая"):
-            prev_task()
+      if st.button("Предыдущая"):
+        prev_task()
+
     with row1[1]:
         if st.button("Следующая"):
             next_task()
@@ -227,10 +230,12 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
         if st.button("Добавить"):
             add_task()
 
+    # Вторая строка
     with row2[0]:
         if st.button("Сохранить"):
             save_csv()
         st.markdown("<span style='color:white; background-color:gray; padding:3px; border-radius:5px'>←</span>", unsafe_allow_html=True)
+
     with row2[1]:
         st.download_button(
             label="Скачать CSV",
@@ -243,7 +248,7 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
             delete_task()
 
     # ---------------------------
-    # Прогонщик
+    # Кнопка Прогонщик (выполнить код текущей задачи)
     # ---------------------------
     st.markdown("---")
     if st.button("🚀 Прогонщик: выполнить код текущей задачи"):
