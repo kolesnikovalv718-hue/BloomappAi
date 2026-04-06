@@ -108,3 +108,9 @@ def run():
 
                 if not strong_classes and not weak_classes:
                     st.write("Все классы распределены равномерно")
+
+                import joblib
+
+                joblib.dump(model, "model.pkl")
+                joblib.dump(vectorizer, "vectorizer.pkl")
+                st.success("Модель сохранена 💾")
