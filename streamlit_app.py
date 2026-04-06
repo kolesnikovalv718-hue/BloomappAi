@@ -87,7 +87,12 @@ if page == "Главная":
     components.html(html_code, height=900, scrolling=True)
 
 # Остальные страницы
-elif page == "Редактор задач": import task1; task1.run()
+elif page == "Редактор задач":
+    try:
+        import task1
+        task1.run()
+    except Exception as e:
+        st.error(e)
 elif page == "Обучение модели": import task2; task2.run()
 elif page == "Статистика модели": import task3; task3.run()
 elif page == "Сохранение модели": import task4; task4.run()
