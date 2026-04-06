@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import joblib
 
 def run():
     st.markdown("""
@@ -51,17 +52,16 @@ div[data-testid="column"]:nth-of-type(6) .stButton > button {
 }
 
 </style>
-""", unsafe_allow_html=True)
-    import joblib
+""", unsafe_allow_html=True) 
+    
+    # --- Путь к CSV
+    # --- Загрузка модели и векторизатора
+    model = joblib.load("model.pkl")
+    vectorizer = joblib.load("vectorizer.pkl")
 
-     model = joblib.load("model.pkl")
-     vectorizer = joblib.load("vectorizer.pkl")
-
-     def predict_bloom(text):
+    def predict_bloom(text):
         vec = vectorizer.transform([text])
         return model.predict(vec)[0]
-         
-    # --- Путь к CSV
     file_path = "blooms_dataset.csv"
 
     # --Загрузка или создание CSV
