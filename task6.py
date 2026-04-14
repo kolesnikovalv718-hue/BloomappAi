@@ -8,7 +8,7 @@ import re
 # ИИ (HuggingFace, опционально)
 # ===========================
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-HF_TOKEN = "hf_hf_JwMcMfYDdkzFazocmTPsUZBLMlPRxUYtJH"
+HF_TOKEN = "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"
 
 def gpt_explain(task_text):
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
@@ -20,6 +20,8 @@ def gpt_explain(task_text):
         r = requests.post(HF_MODEL_URL, headers=headers, json=payload, timeout=60)
 
         if r.status_code != 200:
+            st.write("STATUS:", r.status_code)
+            st.write("RESPONSE:", r.text)
             return "💡 ИИ временно недоступен"
 
         data = r.json()
