@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import requests
 import re
-st.write("APP VERSION 2 LOADED")
+
 # ---------------------------
 # ИИ (HuggingFace)
 # ---------------------------
@@ -14,6 +14,7 @@ HF_MODEL_URL = "https://api-inference.huggingface.co/models/NousResearch/Nous-He
 HF_TOKEN = "hdd"
 
 def gpt_explain(task_text):
+    st.write("APP VERSION 2 LOADED")
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {
         "inputs": f"Объясни задачу кратко и понятно без ответа:\n{task_text}",
