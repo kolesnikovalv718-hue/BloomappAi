@@ -105,6 +105,9 @@ def run():
 
                 if recommend_addition:
                     st.write("💡 Рекомендуется добавить больше задач для этих классов")
+                import pickle
+                with open('model.pkl', 'wb') as f:
+                    pickle.dump(model, f)
 
                 if not strong_classes and not weak_classes:
                     st.write("Все классы распределены равномерно")
