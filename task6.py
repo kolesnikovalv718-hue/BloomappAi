@@ -5,19 +5,22 @@ import requests
 import re
 
 # ===========================
-# ИИ (HuggingFace, опционально)
+# ИИ (HuggingFace)
 # ===========================
-HF_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-import streamlit as st
+HF_MODEL_URL = "https://router.huggingface.co/v1/models/mistralai/Mistral-7B-Instruct-v0.2"
 
-HF_TOKEN = st.secrets["HF_TOKEN"]
+HF_TOKEN = st.secrets.get("HF_TOKEN", None)
 
 def gpt_explain(task_text):
+    if not HF_TOKEN:
+        return "💡 Нет HF_TOKEN в secrets"
+
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {
         "inputs": f"Объясни задачу шаг за шагом:\n{task_text}",
         "parameters": {"max_new_tokens": 200}
     }
+
     try:
         r = requests.post(HF_MODEL_URL, headers=headers, json=payload, timeout=60)
 
@@ -27,13 +30,18 @@ def gpt_explain(task_text):
             return "💡 ИИ временно недоступен"
 
         data = r.json()
+
+        # разные форматы ответа HF
         if isinstance(data, list) and "generated_text" in data[0]:
             return data[0]["generated_text"]
 
-        return "💡 Не удалось получить ответ"
+        if isinstance(data, dict) and "generated_text" in data:
+            return data["generated_text"]
 
-    except:
-        return "💡 Ошибка подключения к ИИ"
+        return str(data)
+
+    except Exception as e:
+        return f"💡 Ошибка подключения: {e}"
 
 
 # ===========================
@@ -41,9 +49,6 @@ def gpt_explain(task_text):
 # ===========================
 def run():
 
-    # ---------------------------
-    # DATASET
-    # ---------------------------
     file_path = "blooms_dataset.csv"
 
     if os.path.exists(file_path):
@@ -60,9 +65,6 @@ def run():
     df["text"] = df["text"].fillna("")
     df["answer"] = df["answer"].fillna("")
 
-    # ---------------------------
-    # SESSION STATE
-    # ---------------------------
     if "df" not in st.session_state:
         st.session_state.df = df.copy()
 
@@ -75,9 +77,6 @@ def run():
     if "total" not in st.session_state:
         st.session_state.total = 0
 
-    # ---------------------------
-    # UI HEADER
-    # ---------------------------
     st.title("📚 LMS PRO CHECKER")
 
     st.progress(st.session_state.score / max(st.session_state.total, 1))
@@ -86,7 +85,7 @@ def run():
     tab1, tab2, tab3 = st.tabs(["📚 Задачи", "💻 Решение", "💡 ИИ"])
 
     # ===========================
-    # TAB 1 - TASKS
+    # TAB 1
     # ===========================
     with tab1:
 
@@ -99,7 +98,7 @@ def run():
                 filtered_df["topic"].str.contains(topic.lower().strip(), na=False)
             ]
 
-        task_options = filtered_df.reset_index(drop=False)
+        task_options = filtered_df.reset_index()
 
         selected = st.selectbox(
             "Выберите задачу",
@@ -110,7 +109,7 @@ def run():
         st.session_state.selected_task = task_options.loc[selected, "index"]
 
     # ===========================
-    # TAB 2 - SOLVE (FULL CHECKER)
+    # TAB 2
     # ===========================
     with tab2:
 
@@ -122,7 +121,6 @@ def run():
 
         st.markdown("## 📌 Задача")
 
-        # LaTeX FIX
         parts = re.split(r"(\$\$.*?\$\$)", task["text"], flags=re.DOTALL)
         for part in parts:
             if part.startswith("$$") and part.endswith("$$"):
@@ -130,20 +128,12 @@ def run():
             else:
                 st.markdown(part)
 
-        # ===========================
-        # MODE SELECTOR (ВАЖНО)
-        # ===========================
-        mode = st.radio(
-            "Режим проверки",
-            ["Ответ", "Код", "Оба"]
-        )
+        mode = st.radio("Режим проверки", ["Ответ", "Код", "Оба"])
 
         # ===========================
-        # ОТВЕТ
+        # ANSWER
         # ===========================
         if mode in ["Ответ", "Оба"]:
-
-            st.markdown("### ✍️ Ответ")
 
             student_answer = st.text_input("Введите ответ")
 
@@ -156,16 +146,12 @@ def run():
                     st.session_state.score += 1
                 else:
                     st.error("Неверно ❌")
-
-                    st.info("💡 Проверь формулу, ввод и порядок действий")
                     st.info(f"📌 Ожидаемый ответ: {task['answer']}")
 
         # ===========================
-        # КОД
+        # CODE
         # ===========================
         if mode in ["Код", "Оба"]:
-
-            st.markdown("### 💻 Python код")
 
             student_code = st.text_area("Введите код")
 
@@ -177,28 +163,27 @@ def run():
 
                     exec(student_code, safe_globals, safe_locals)
 
-                    result = list(safe_locals.values())[-1] if safe_locals else None
+                    result = None
+                    if safe_locals:
+                        result = list(safe_locals.values())[-1]
 
                     st.write("📤 Результат:")
                     st.code(result)
 
                     st.session_state.total += 1
 
-                    # СВЕРКА (ВАЖНО)
                     if str(result).strip() == str(task["answer"]).strip():
                         st.success("Код верный ✅")
                         st.session_state.score += 1
                     else:
                         st.error("Код неверный ❌")
-
-                        st.info("💡 Проверь логику и переменные")
                         st.info(f"📌 Ожидаемый ответ: {task['answer']}")
 
                 except Exception as e:
                     st.error(f"Ошибка выполнения кода: {e}")
 
     # ===========================
-    # TAB 3 - AI EXPLANATION
+    # TAB 3
     # ===========================
     with tab3:
 
@@ -212,8 +197,5 @@ def run():
             st.info(gpt_explain(task["text"]))
 
 
-# ===========================
-# RUN
-# ===========================
 if __name__ == "__main__":
     run()
