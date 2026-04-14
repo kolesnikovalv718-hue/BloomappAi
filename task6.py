@@ -8,7 +8,9 @@ import re
 # ИИ (HuggingFace, опционально)
 # ===========================
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-HF_TOKEN = "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"
+import streamlit as st
+
+HF_TOKEN = st.secrets["HF_TOKEN"]
 
 def gpt_explain(task_text):
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
