@@ -5,66 +5,63 @@ import requests
 import re
 
 # ===========================
-# ИИ (СТАБИЛЬНЫЙ HUGGINGFACE API)
+# HF ROUTER ИИ
 # ===========================
-HF_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-
-HF_TOKEN = st.secrets["HF_TOKEN"]  # или вставь напрямую для теста
+HF_MODEL_URL = "https://router.huggingface.co/v1/chat/completions"
+HF_TOKEN = st.secrets["HF_TOKEN"]
 
 def gpt_explain(task_text):
 
     headers = {
-        "Authorization": f"Bearer {HF_TOKEN}"
+        "Authorization": f"Bearer {HF_TOKEN}",
+        "Content-Type": "application/json"
     }
 
     payload = {
-        "inputs": task_text,
-        "parameters": {
-            "max_new_tokens": 200
-        }
+        "model": "mistralai/mistral-7b-instruct",
+        "messages": [
+            {
+                "role": "user",
+                "content": f"Объясни задачу ученику просто:\n{task_text}"
+            }
+        ],
+        "max_tokens": 200
     }
 
     try:
         r = requests.post(HF_MODEL_URL, headers=headers, json=payload, timeout=60)
         data = r.json()
 
-        # ошибка API
         if isinstance(data, dict) and "error" in data:
             return f"💡 ИИ недоступен: {data['error']}"
 
-        # нормальный ответ
-        if isinstance(data, list) and "generated_text" in data[0]:
-            return data[0]["generated_text"]
-
-        return str(data)
+        return data["choices"][0]["message"]["content"]
 
     except Exception as e:
-        return f"💡 Ошибка подключения: {e}"
+        return f"💡 Ошибка: {e}"
 
 
-# ===========================
-# APP
-# ===========================
 def run():
 
+    # ===========================
+    # DATA
+    # ===========================
     file_path = "blooms_dataset.csv"
 
     if os.path.exists(file_path):
         df = pd.read_csv(file_path, encoding="utf-8")
     else:
         df = pd.DataFrame({
-            "text": ["Пример задачи $$P(A)=1/6$$"],
+            "text": ["Пример $$P(A)=1/6$$"],
             "answer": ["1/6"],
             "topic": ["probability"],
             "bloom": ["remembering"]
         })
 
-    df["topic"] = df["topic"].fillna("").str.strip().str.lower()
-    df["text"] = df["text"].fillna("")
-    df["answer"] = df["answer"].fillna("")
+    df = df.fillna("")
 
     # ===========================
-    # SESSION
+    # SESSION STATE
     # ===========================
     if "selected_task" not in st.session_state:
         st.session_state.selected_task = None
@@ -75,40 +72,48 @@ def run():
     if "total" not in st.session_state:
         st.session_state.total = 0
 
+    if "topic_stats" not in st.session_state:
+        st.session_state.topic_stats = {}
+
     # ===========================
-    # UI
+    # UI HEADER
     # ===========================
-    st.title("📚 LMS PRO (STABLE VERSION)")
+    st.title("📚 LMS PRO + ANALYTICS")
 
     st.progress(st.session_state.score / max(st.session_state.total, 1))
     st.write(f"⭐ {st.session_state.score} / {st.session_state.total}")
 
-    tab1, tab2, tab3 = st.tabs(["📚 Задачи", "💻 Решение", "💡 ИИ"])
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📚 Задачи",
+        "💻 Решение",
+        "💡 ИИ",
+        "📊 Анализ"
+    ])
 
     # ===========================
-    # TAB 1
+    # TAB 1 - TASKS
     # ===========================
     with tab1:
 
-        topic = st.text_input("Фильтр по теме")
+        topic = st.text_input("Фильтр темы")
 
         filtered = df.copy()
 
-        if topic.strip():
+        if topic:
             filtered = filtered[filtered["topic"].str.contains(topic.lower(), na=False)]
 
-        task_list = filtered.reset_index()
+        tasks = filtered.reset_index()
 
         choice = st.selectbox(
             "Выбери задачу",
-            task_list.index,
-            format_func=lambda i: task_list.loc[i, "text"][:80]
+            tasks.index,
+            format_func=lambda i: tasks.loc[i, "text"][:80]
         )
 
-        st.session_state.selected_task = task_list.loc[choice, "index"]
+        st.session_state.selected_task = tasks.loc[choice, "index"]
 
     # ===========================
-    # TAB 2
+    # TAB 2 - SOLVE
     # ===========================
     with tab2:
 
@@ -122,34 +127,43 @@ def run():
 
         parts = re.split(r"(\$\$.*?\$\$)", task["text"], flags=re.DOTALL)
         for part in parts:
-            if part.startswith("$$") and part.endswith("$$"):
+            if part.startswith("$$"):
                 st.latex(part.strip("$$"))
             else:
                 st.markdown(part)
 
-        # --------------------
-        # ОТВЕТ
-        # --------------------
+        # ===========================
+        # ANSWER
+        # ===========================
         st.markdown("### ✍️ Ответ")
-        ans = st.text_input("Введите ответ")
+        ans = st.text_input("Ответ")
 
-        if st.button("Проверить ответ"):
+        if st.button("Проверить"):
+
             st.session_state.total += 1
+
+            topic = task["topic"]
+
+            if topic not in st.session_state.topic_stats:
+                st.session_state.topic_stats[topic] = {"total": 0, "correct": 0}
+
+            st.session_state.topic_stats[topic]["total"] += 1
 
             if ans.strip() == task["answer"].strip():
                 st.success("Верно ✅")
                 st.session_state.score += 1
+                st.session_state.topic_stats[topic]["correct"] += 1
             else:
                 st.error("Неверно ❌")
-                st.info(f"Ожидаемый ответ: {task['answer']}")
+                st.info(f"Ответ: {task['answer']}")
 
-        # --------------------
-        # КОД
-        # --------------------
+        # ===========================
+        # CODE
+        # ===========================
         st.markdown("### 💻 Код")
-        code = st.text_area("Python код")
+        code = st.text_area("Python")
 
-        if st.button("Выполнить код"):
+        if st.button("Run"):
 
             try:
                 local = {}
@@ -161,18 +175,25 @@ def run():
 
                 st.session_state.total += 1
 
+                topic = task["topic"]
+
+                if topic not in st.session_state.topic_stats:
+                    st.session_state.topic_stats[topic] = {"total": 0, "correct": 0}
+
+                st.session_state.topic_stats[topic]["total"] += 1
+
                 if str(result).strip() == task["answer"].strip():
                     st.success("Код верный ✅")
                     st.session_state.score += 1
+                    st.session_state.topic_stats[topic]["correct"] += 1
                 else:
                     st.error("Код неверный ❌")
-                    st.info(f"Ожидаемый: {task['answer']}")
 
             except Exception as e:
                 st.error(f"Ошибка: {e}")
 
     # ===========================
-    # TAB 3
+    # TAB 3 - AI
     # ===========================
     with tab3:
 
@@ -182,8 +203,48 @@ def run():
 
         task = df.loc[st.session_state.selected_task]
 
-        if st.button("💡 Объяснить"):
+        if st.button("💡 Объяснить ИИ"):
             st.info(gpt_explain(task["text"]))
+
+    # ===========================
+    # TAB 4 - ANALYTICS
+    # ===========================
+    with tab4:
+
+        st.subheader("📊 Анализ класса по темам")
+
+        if not st.session_state.topic_stats:
+            st.info("Пока нет данных")
+        else:
+
+            data = []
+
+            for topic, stats in st.session_state.topic_stats.items():
+
+                total = stats["total"]
+                correct = stats["correct"]
+
+                acc = correct / total if total > 0 else 0
+
+                data.append({
+                    "Тема": topic,
+                    "Всего": total,
+                    "Верно": correct,
+                    "Успешность (%)": round(acc * 100, 1)
+                })
+
+            df_stats = pd.DataFrame(data)
+
+            st.dataframe(df_stats)
+
+            strong = df_stats[df_stats["Успешность (%)"] >= 75]["Тема"].tolist()
+            weak = df_stats[df_stats["Успешность (%)"] < 60]["Тема"].tolist()
+
+            st.markdown("### 💪 Сильные темы")
+            st.success(", ".join(strong) if strong else "Нет сильных тем")
+
+            st.markdown("### ⚠️ Слабые темы")
+            st.error(", ".join(weak) if weak else "Нет слабых тем")
 
 
 if __name__ == "__main__":
