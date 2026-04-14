@@ -6,7 +6,7 @@ page = st.sidebar.selectbox(
     "Выбор",
     ["Главная", "Редактор задач", "Обучение модели",
      "Статистика модели", "Сохранение модели",
-     "ученик","экспорт проба","runtask"]
+     "Ученик","Экспорт заданий","runtask"]
 )
 
 if page == "Главная":
@@ -96,6 +96,6 @@ elif page == "Редактор задач":
 elif page == "Обучение модели": import task2; task2.run()
 elif page == "Статистика модели": import task3; task3.run()
 elif page == "Сохранение модели": import task4; task4.run()
-elif page == "ученик": import task6; task6.run()
-elif page == "экспорт проба": import task8; task8.run()
+elif page == "Ученик": import task6; task6.run()
+elif page == "Экспорт заданий": import task8; task8.run()
 elif page == "runtask": import task_generat; task_generat.run()
