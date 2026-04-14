@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import requests
 import re
-
+st.write("APP VERSION 2 LOADED")
 # ---------------------------
 # ИИ (HuggingFace)
 # ---------------------------
