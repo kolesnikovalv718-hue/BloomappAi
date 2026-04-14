@@ -117,3 +117,11 @@ def run():
                 joblib.dump(model, "model.pkl")
                 joblib.dump(vectorizer, "vectorizer.pkl")
                 st.success("Модель сохранена 💾")
+
+                import pickle
+
+                with open("model.pkl", "rb") as f:
+                    st.download_button("Скачать model.pkl", f, file_name="model.pkl")
+
+                with open("vectorizer.pkl", "rb") as f:
+                    st.download_button("Скачать vectorizer.pkl", f, file_name="vectorizer.pkl")
