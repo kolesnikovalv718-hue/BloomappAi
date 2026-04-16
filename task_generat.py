@@ -6,43 +6,80 @@ import streamlit as st
 # ===========================
 HF_TOKEN = st.secrets.get("HF_TOKEN", "")
 
+# ===========================
+# MODEL
+# ===========================
+API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+
 HEADERS = {
     "Authorization": f"Bearer {HF_TOKEN}"
 }
 
+
 # ===========================
-# FREE MODEL (STABLE)
+# DEBUG PRINTS
 # ===========================
-API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+def debug_info():
+    st.write("========== DEBUG INFO ==========")
+    st.write("HF_TOKEN exists:", bool(HF_TOKEN))
+    st.write("API_URL:", API_URL)
+    st.write("HEADERS:", {"Authorization": "Bearer ***" if HF_TOKEN else "MISSING"})
+    st.write("================================")
 
 
 # ===========================
-# REQUEST FUNCTION
+# REQUEST FUNCTION (MAX LOGGING)
 # ===========================
-def generate_questions(topic: str) -> str:
-    prompt = f"""
-Сгенерируй 5 вопросов по теме: {topic}
-Для школьников.
-Формат: нумерованный список.
-Коротко и понятно.
-"""
+def generate_questions(topic: str):
 
-    response = requests.post(
-        API_URL,
-        headers=HEADERS,
-        json={"inputs": prompt}
-    )
+    st.write("========== REQUEST START ==========")
+    st.write("Input topic:", topic)
 
-    # ❗ если ошибка API — показываем сразу (очень важно для диагностики)
-    if response.status_code != 200:
-        return f"❌ API ERROR {response.status_code}\n{response.text}"
+    prompt = f"Сгенерируй 5 вопросов по теме: {topic}"
+
+    payload = {"inputs": prompt}
+
+    st.write("Payload:", payload)
+    st.write("Sending POST request...")
 
     try:
-        data = response.json()
-    except Exception:
-        return f"❌ JSON ERROR:\n{response.text}"
+        response = requests.post(
+            API_URL,
+            headers=HEADERS,
+            json=payload,
+            timeout=30
+        )
+    except Exception as e:
+        return f"❌ REQUEST EXCEPTION: {e}"
 
-    # HF иногда возвращает список
+    # ===========================
+    # RAW RESPONSE
+    # ===========================
+    st.write("========== RESPONSE RECEIVED ==========")
+    st.write("Status code:", response.status_code)
+    st.write("Response headers:", dict(response.headers))
+    st.write("Raw text (first 500 chars):")
+    st.code(response.text[:500])
+
+    # ===========================
+    # PARSE JSON
+    # ===========================
+    try:
+        data = response.json()
+    except Exception as e:
+        return f"❌ JSON PARSE ERROR: {e}\nRAW: {response.text}"
+
+    st.write("Parsed JSON:", data)
+
+    # ===========================
+    # ERROR HANDLING
+    # ===========================
+    if response.status_code != 200:
+        return f"❌ API ERROR {response.status_code}\n{data}"
+
+    # ===========================
+    # OUTPUT
+    # ===========================
     if isinstance(data, list):
         return data[0].get("generated_text", str(data))
 
@@ -53,38 +90,37 @@ def generate_questions(topic: str) -> str:
 # STREAMLIT UI
 # ===========================
 def run():
+
     st.set_page_config(
-        page_title="Генератор вопросов",
-        page_icon="📝",
+        page_title="HF DEBUG APP",
+        page_icon="🧪",
         layout="centered"
     )
 
-    st.title("📝 Генератор вопросов (Free AI)")
+    st.title("🧪 HF DEBUG MODE (полная диагностика)")
 
-    # проверка токена
+    debug_info()
+
     if not HF_TOKEN:
-        st.error("❌ HF_TOKEN не найден в Streamlit Secrets")
+        st.error("❌ HF_TOKEN отсутствует в secrets")
         st.stop()
 
-    topic = st.text_input(
-        "Введите тему",
-        placeholder="например: Python циклы, ООП, физика"
-    )
+    topic = st.text_input("Введите тему")
 
-    if st.button("Сгенерировать"):
+    if st.button("ТЕСТ ЗАПРОСА"):
+
         if not topic.strip():
             st.warning("Введите тему")
             return
 
-        with st.spinner("Генерация..."):
-            result = generate_questions(topic)
+        result = generate_questions(topic)
 
-        st.subheader("Результат:")
+        st.subheader("FINAL RESULT")
         st.write(result)
 
 
 # ===========================
-# START
+# RUN
 # ===========================
 if __name__ == "__main__":
     run()
