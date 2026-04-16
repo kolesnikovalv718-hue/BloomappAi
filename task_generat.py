@@ -4,11 +4,9 @@ import os
 import requests
 import streamlit as st
 #from dotenv import load_dotenv  # для локального .env
-
-# Если запускаешь локально, раскомментируй
 # load_dotenv()
 
-API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
 HF_TOKEN = os.getenv("HF_TOKEN")
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
