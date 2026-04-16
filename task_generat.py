@@ -2,28 +2,61 @@ import requests
 import streamlit as st
 
 # ===========================
-# НАСТРОЙКИ API
+# ТОКЕН
 # ===========================
 HF_TOKEN = st.secrets.get("HF_TOKEN", "")
 
-API_URL = "https://router.huggingface.co/v1/chat/completions"
-
 HEADERS = {
-    "Authorization": f"Bearer {HF_TOKEN}",
-    "Content-Type": "application/json"
+    "Authorization": f"Bearer {HF_TOKEN}"
 }
 
-# модели (основная + запасная)
-MODELS = [
-    "mistralai/Mistral-7B-Instruct-v0.2",
-    "HuggingFaceH4/zephyr-7b-beta"
-]
+# ===========================
+# МОДЕЛИ
+# ===========================
+MODELS = {
+    "🟢 Бесплатная (стабильная)": {
+        "type": "inference",
+        "url": "https://api-inference.huggingface.co/models/google/flan-t5-large"
+    },
+    "🟡 Mistral (иногда работает)": {
+        "type": "router",
+        "model": "mistralai/Mistral-7B-Instruct-v0.2"
+    },
+    "🟡 Zephyr (иногда работает)": {
+        "type": "router",
+        "model": "HuggingFaceH4/zephyr-7b-beta"
+    }
+}
 
 
 # ===========================
-# ЗАПРОС К API
+# INFERENCE API
 # ===========================
-def ask_model(model: str, prompt: str) -> str:
+def ask_inference(url, prompt):
+    response = requests.post(url, headers=HEADERS, json={"inputs": prompt})
+
+    try:
+        data = response.json()
+    except Exception:
+        return f"❌ Ошибка: {response.text}"
+
+    if response.status_code != 200:
+        return f"❌ API {response.status_code}: {data}"
+
+    return data[0].get("generated_text", str(data))
+
+
+# ===========================
+# ROUTER API
+# ===========================
+def ask_router(model, prompt):
+    url = "https://router.huggingface.co/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {HF_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
     data = {
         "model": model,
         "messages": [
@@ -32,12 +65,12 @@ def ask_model(model: str, prompt: str) -> str:
         "temperature": 0.7
     }
 
-    response = requests.post(API_URL, headers=HEADERS, json=data)
+    response = requests.post(url, headers=headers, json=data)
 
     try:
         result = response.json()
     except Exception:
-        return f"❌ Ошибка разбора ответа: {response.text}"
+        return f"❌ Ошибка: {response.text}"
 
     if response.status_code != 200:
         return f"❌ API {response.status_code}: {result}"
@@ -45,31 +78,37 @@ def ask_model(model: str, prompt: str) -> str:
     try:
         return result["choices"][0]["message"]["content"]
     except Exception:
-        return f"❌ Непонятный формат ответа: {result}"
+        return f"❌ Формат ответа: {result}"
 
 
 # ===========================
-# ГЕНЕРАЦИЯ С FALLBACK
+# ГЕНЕРАЦИЯ
 # ===========================
-def generate_questions(topic: str) -> str:
+def generate_questions(topic: str, model_choice: str) -> str:
     prompt = f"""
-Сгенерируй 5 чётких вопросов по теме: "{topic}"
-Для школьников. Без лишнего текста.
+Сгенерируй 5 вопросов по теме: "{topic}"
+Для школьников.
 Нумерованный список.
 """
 
-    for model in MODELS:
-        result = ask_model(model, prompt)
+    config = MODELS[model_choice]
 
-        # если модель сработала — выходим
-        if not result.startswith("❌"):
-            return result
+    if config["type"] == "inference":
+        return ask_inference(config["url"], prompt)
 
-    return "❌ Все модели недоступны. Попробуй позже."
+    elif config["type"] == "router":
+        result = ask_router(config["model"], prompt)
+
+        # fallback если упало
+        if result.startswith("❌"):
+            fallback = MODELS["🟢 Бесплатная (стабильная)"]
+            return ask_inference(fallback["url"], prompt)
+
+        return result
 
 
 # ===========================
-# STREAMLIT UI
+# UI
 # ===========================
 def run():
     st.set_page_config(
@@ -78,16 +117,17 @@ def run():
         layout="centered"
     )
 
-    st.title("📝 Генератор вопросов для школьников")
+    st.title("📝 Генератор вопросов")
 
-    # проверка токена сразу
     if not HF_TOKEN:
-        st.error("❌ HF_TOKEN не найден в Secrets")
+        st.error("❌ HF_TOKEN не найден")
         st.stop()
 
-    topic = st.text_input(
-        "Введите тему",
-        placeholder="например: циклы Python, закон Ома, базы данных"
+    topic = st.text_input("Введите тему")
+
+    model_choice = st.selectbox(
+        "Выбери модель",
+        list(MODELS.keys())
     )
 
     if st.button("Сгенерировать"):
@@ -95,8 +135,8 @@ def run():
             st.warning("Введите тему!")
             return
 
-        with st.spinner("Генерируем вопросы..."):
-            result = generate_questions(topic)
+        with st.spinner("Генерируем..."):
+            result = generate_questions(topic, model_choice)
 
         st.subheader("Результат:")
         st.write(result)
