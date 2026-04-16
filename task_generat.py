@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 
 # ===========================
-# ТОКЕН
+# TOKEN
 # ===========================
 HF_TOKEN = st.secrets.get("HF_TOKEN", "")
 
@@ -11,18 +11,18 @@ HEADERS = {
 }
 
 # ===========================
-# БЕСПЛАТНАЯ МОДЕЛЬ (СТАБИЛЬНАЯ)
+# FREE MODEL (STABLE)
 # ===========================
 API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
 
 
 # ===========================
-# ЗАПРОС К МОДЕЛИ
+# REQUEST FUNCTION
 # ===========================
 def generate_questions(topic: str) -> str:
     prompt = f"""
-Сгенерируй 5 вопросов по теме: {topic}.
-Уровень: школьники.
+Сгенерируй 5 вопросов по теме: {topic}
+Для школьников.
 Формат: нумерованный список.
 Коротко и понятно.
 """
@@ -33,17 +33,16 @@ def generate_questions(topic: str) -> str:
         json={"inputs": prompt}
     )
 
-    # если модель "просыпается"
+    # ❗ если ошибка API — показываем сразу (очень важно для диагностики)
+    if response.status_code != 200:
+        return f"❌ API ERROR {response.status_code}\n{response.text}"
+
     try:
         data = response.json()
     except Exception:
-        return f"❌ Ошибка ответа API: {response.text}"
+        return f"❌ JSON ERROR:\n{response.text}"
 
-    # обработка ошибок HF
-    if response.status_code != 200:
-        return f"❌ API ошибка {response.status_code}: {data}"
-
-    # иногда HF возвращает список
+    # HF иногда возвращает список
     if isinstance(data, list):
         return data[0].get("generated_text", str(data))
 
@@ -60,24 +59,24 @@ def run():
         layout="centered"
     )
 
-    st.title("📝 Генератор вопросов (бесплатный AI)")
+    st.title("📝 Генератор вопросов (Free AI)")
 
     # проверка токена
     if not HF_TOKEN:
-        st.error("❌ Добавь HF_TOKEN в Streamlit Secrets")
+        st.error("❌ HF_TOKEN не найден в Streamlit Secrets")
         st.stop()
 
     topic = st.text_input(
         "Введите тему",
-        placeholder="например: Python циклы, ООП, физика закон Ома"
+        placeholder="например: Python циклы, ООП, физика"
     )
 
     if st.button("Сгенерировать"):
         if not topic.strip():
-            st.warning("Введите тему!")
+            st.warning("Введите тему")
             return
 
-        with st.spinner("Генерирую вопросы..."):
+        with st.spinner("Генерация..."):
             result = generate_questions(topic)
 
         st.subheader("Результат:")
@@ -85,7 +84,7 @@ def run():
 
 
 # ===========================
-# ЗАПУСК
+# START
 # ===========================
 if __name__ == "__main__":
     run()
