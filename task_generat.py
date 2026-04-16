@@ -11,110 +11,47 @@ HEADERS = {
 }
 
 # ===========================
-# МОДЕЛИ
+# БЕСПЛАТНАЯ МОДЕЛЬ (СТАБИЛЬНАЯ)
 # ===========================
-MODELS = {
-    "🟢 Бесплатная (работает всегда)": {
-        "type": "inference",
-        "url": "https://api-inference.huggingface.co/models/google/flan-t5-large"
-    },
-    "🟡 Mistral (может не работать)": {
-        "type": "router",
-        "model": "mistralai/Mistral-7B-Instruct-v0.2"
-    },
-    "🟡 Zephyr (может не работать)": {
-        "type": "router",
-        "model": "HuggingFaceH4/zephyr-7b-beta"
-    }
-}
+API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+
 
 # ===========================
-# INFERENCE API (ТОЛЬКО ЭТОТ URL)
+# ЗАПРОС К МОДЕЛИ
 # ===========================
-def ask_inference(prompt: str) -> str:
-    url = "https://api-inference.huggingface.co/models/google/flan-t5-large"
+def generate_questions(topic: str) -> str:
+    prompt = f"""
+Сгенерируй 5 вопросов по теме: {topic}.
+Уровень: школьники.
+Формат: нумерованный список.
+Коротко и понятно.
+"""
 
     response = requests.post(
-        url,
+        API_URL,
         headers=HEADERS,
         json={"inputs": prompt}
     )
 
+    # если модель "просыпается"
     try:
         data = response.json()
     except Exception:
-        return f"❌ RAW ответ: {response.text}"
+        return f"❌ Ошибка ответа API: {response.text}"
 
+    # обработка ошибок HF
     if response.status_code != 200:
-        return f"❌ API {response.status_code}: {data}"
+        return f"❌ API ошибка {response.status_code}: {data}"
 
-    return data[0].get("generated_text", str(data))
+    # иногда HF возвращает список
+    if isinstance(data, list):
+        return data[0].get("generated_text", str(data))
 
-
-# ===========================
-# ROUTER API
-# ===========================
-def ask_router(model: str, prompt: str) -> str:
-    url = "https://router.huggingface.co/v1/chat/completions"
-
-    headers = {
-        "Authorization": f"Bearer {HF_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7
-    }
-
-    response = requests.post(url, headers=headers, json=data)
-
-    try:
-        result = response.json()
-    except Exception:
-        return f"❌ RAW ответ: {response.text}"
-
-    if response.status_code != 200:
-        return f"❌ API {response.status_code}: {result}"
-
-    try:
-        return result["choices"][0]["message"]["content"]
-    except Exception:
-        return f"❌ Формат ответа: {result}"
+    return str(data)
 
 
 # ===========================
-# ГЕНЕРАЦИЯ
-# ===========================
-def generate_questions(topic: str, model_choice: str) -> str:
-    prompt = f"""
-Сгенерируй 5 вопросов по теме: "{topic}"
-Для школьников.
-Нумерованный список.
-"""
-
-    config = MODELS[model_choice]
-
-    # 🟢 бесплатная модель
-    if config["type"] == "inference":
-        return ask_inference(prompt)
-
-    # 🟡 router модели
-    if config["type"] == "router":
-        result = ask_router(config["model"], prompt)
-
-        # fallback если не работает
-        if result.startswith("❌"):
-            return ask_inference(prompt)
-
-        return result
-
-
-# ===========================
-# UI
+# STREAMLIT UI
 # ===========================
 def run():
     st.set_page_config(
@@ -123,17 +60,16 @@ def run():
         layout="centered"
     )
 
-    st.title("📝 Генератор вопросов")
+    st.title("📝 Генератор вопросов (бесплатный AI)")
 
+    # проверка токена
     if not HF_TOKEN:
-        st.error("❌ HF_TOKEN не найден в Secrets")
+        st.error("❌ Добавь HF_TOKEN в Streamlit Secrets")
         st.stop()
 
-    topic = st.text_input("Введите тему")
-
-    model_choice = st.selectbox(
-        "Выбери модель",
-        list(MODELS.keys())
+    topic = st.text_input(
+        "Введите тему",
+        placeholder="например: Python циклы, ООП, физика закон Ома"
     )
 
     if st.button("Сгенерировать"):
@@ -141,13 +77,15 @@ def run():
             st.warning("Введите тему!")
             return
 
-        with st.spinner("Генерируем..."):
-            result = generate_questions(topic, model_choice)
+        with st.spinner("Генерирую вопросы..."):
+            result = generate_questions(topic)
 
         st.subheader("Результат:")
         st.write(result)
 
 
-# запуск
+# ===========================
+# ЗАПУСК
+# ===========================
 if __name__ == "__main__":
     run()
