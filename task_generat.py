@@ -6,73 +6,75 @@ import streamlit as st
 # ===========================
 HF_TOKEN = st.secrets.get("HF_TOKEN", "")
 
-# ===========================
-# MODEL
-# ===========================
-API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-large"
-
 HEADERS = {
     "Authorization": f"Bearer {HF_TOKEN}"
 }
 
+# ===========================
+# STABLE MODEL (free inference)
+# ===========================
+API_URL = "https://api-inference.huggingface.co/models/microsoft/phi-2"
+
 
 # ===========================
-# DEBUG PRINTS
+# FULL DEBUG INFO
 # ===========================
 def debug_info():
     st.write("========== DEBUG INFO ==========")
     st.write("HF_TOKEN exists:", bool(HF_TOKEN))
     st.write("API_URL:", API_URL)
-    st.write("HEADERS:", {"Authorization": "Bearer ***" if HF_TOKEN else "MISSING"})
+    st.write("MODEL TYPE: inference API (NO /models/google)")
     st.write("================================")
 
 
 # ===========================
-# REQUEST FUNCTION (MAX LOGGING)
+# REQUEST WITH FULL LOGGING
 # ===========================
 def generate_questions(topic: str):
 
     st.write("========== REQUEST START ==========")
     st.write("Input topic:", topic)
 
-    prompt = f"Сгенерируй 5 вопросов по теме: {topic}"
+    prompt = f"Сгенерируй 5 школьных вопросов по теме: {topic}"
 
-    payload = {"inputs": prompt}
+    payload = {
+        "inputs": prompt
+    }
 
     st.write("Payload:", payload)
-    st.write("Sending POST request...")
+    st.write("Sending request to HF...")
 
     try:
         response = requests.post(
             API_URL,
             headers=HEADERS,
             json=payload,
-            timeout=30
+            timeout=60
         )
     except Exception as e:
-        return f"❌ REQUEST EXCEPTION: {e}"
+        return f"❌ REQUEST ERROR: {e}"
 
     # ===========================
-    # RAW RESPONSE
+    # RESPONSE DEBUG
     # ===========================
     st.write("========== RESPONSE RECEIVED ==========")
     st.write("Status code:", response.status_code)
-    st.write("Response headers:", dict(response.headers))
-    st.write("Raw text (first 500 chars):")
-    st.code(response.text[:500])
+    st.write("Headers:", dict(response.headers))
+    st.write("Raw text (first 800 chars):")
+    st.code(response.text[:800])
 
     # ===========================
-    # PARSE JSON
+    # JSON PARSE
     # ===========================
     try:
         data = response.json()
     except Exception as e:
-        return f"❌ JSON PARSE ERROR: {e}\nRAW: {response.text}"
+        return f"❌ JSON ERROR: {e}\nRAW:\n{response.text}"
 
     st.write("Parsed JSON:", data)
 
     # ===========================
-    # ERROR HANDLING
+    # ERROR CHECK
     # ===========================
     if response.status_code != 200:
         return f"❌ API ERROR {response.status_code}\n{data}"
@@ -92,22 +94,22 @@ def generate_questions(topic: str):
 def run():
 
     st.set_page_config(
-        page_title="HF DEBUG APP",
+        page_title="HF DEBUG FIXED",
         page_icon="🧪",
         layout="centered"
     )
 
-    st.title("🧪 HF DEBUG MODE (полная диагностика)")
+    st.title("🧪 HF DEBUG FIX (working version)")
 
     debug_info()
 
     if not HF_TOKEN:
-        st.error("❌ HF_TOKEN отсутствует в secrets")
+        st.error("❌ HF_TOKEN missing in Streamlit secrets")
         st.stop()
 
     topic = st.text_input("Введите тему")
 
-    if st.button("ТЕСТ ЗАПРОСА"):
+    if st.button("ТЕСТ"):
 
         if not topic.strip():
             st.warning("Введите тему")
