@@ -14,31 +14,36 @@ HEADERS = {
 # МОДЕЛИ
 # ===========================
 MODELS = {
-    "🟢 Бесплатная (стабильная)": {
+    "🟢 Бесплатная (работает всегда)": {
         "type": "inference",
         "url": "https://api-inference.huggingface.co/models/google/flan-t5-large"
     },
-    "🟡 Mistral (иногда работает)": {
+    "🟡 Mistral (может не работать)": {
         "type": "router",
         "model": "mistralai/Mistral-7B-Instruct-v0.2"
     },
-    "🟡 Zephyr (иногда работает)": {
+    "🟡 Zephyr (может не работать)": {
         "type": "router",
         "model": "HuggingFaceH4/zephyr-7b-beta"
     }
 }
 
+# ===========================
+# INFERENCE API (ТОЛЬКО ЭТОТ URL)
+# ===========================
+def ask_inference(prompt: str) -> str:
+    url = "https://api-inference.huggingface.co/models/google/flan-t5-large"
 
-# ===========================
-# INFERENCE API
-# ===========================
-def ask_inference(url, prompt):
-    response = requests.post(url, headers=HEADERS, json={"inputs": prompt})
+    response = requests.post(
+        url,
+        headers=HEADERS,
+        json={"inputs": prompt}
+    )
 
     try:
         data = response.json()
     except Exception:
-        return f"❌ Ошибка: {response.text}"
+        return f"❌ RAW ответ: {response.text}"
 
     if response.status_code != 200:
         return f"❌ API {response.status_code}: {data}"
@@ -49,7 +54,7 @@ def ask_inference(url, prompt):
 # ===========================
 # ROUTER API
 # ===========================
-def ask_router(model, prompt):
+def ask_router(model: str, prompt: str) -> str:
     url = "https://router.huggingface.co/v1/chat/completions"
 
     headers = {
@@ -70,7 +75,7 @@ def ask_router(model, prompt):
     try:
         result = response.json()
     except Exception:
-        return f"❌ Ошибка: {response.text}"
+        return f"❌ RAW ответ: {response.text}"
 
     if response.status_code != 200:
         return f"❌ API {response.status_code}: {result}"
@@ -93,16 +98,17 @@ def generate_questions(topic: str, model_choice: str) -> str:
 
     config = MODELS[model_choice]
 
+    # 🟢 бесплатная модель
     if config["type"] == "inference":
-        return ask_inference(config["url"], prompt)
+        return ask_inference(prompt)
 
-    elif config["type"] == "router":
+    # 🟡 router модели
+    if config["type"] == "router":
         result = ask_router(config["model"], prompt)
 
-        # fallback если упало
+        # fallback если не работает
         if result.startswith("❌"):
-            fallback = MODELS["🟢 Бесплатная (стабильная)"]
-            return ask_inference(fallback["url"], prompt)
+            return ask_inference(prompt)
 
         return result
 
@@ -120,7 +126,7 @@ def run():
     st.title("📝 Генератор вопросов")
 
     if not HF_TOKEN:
-        st.error("❌ HF_TOKEN не найден")
+        st.error("❌ HF_TOKEN не найден в Secrets")
         st.stop()
 
     topic = st.text_input("Введите тему")
@@ -140,3 +146,8 @@ def run():
 
         st.subheader("Результат:")
         st.write(result)
+
+
+# запуск
+if __name__ == "__main__":
+    run()
